@@ -1,24 +1,29 @@
 CC = g++
 FLAGS = -g -Wall
 
-MAIN = main
+all: main.out
 
-# Build mediator and player program with all dependencies
-all: $(MAIN).out
-
-$(MAIN).out: $(MAIN).o
+main.out: main.o car.o roundabout.o
 	$(CC) $(FLAGS) $^ -o $@
 
-$(MAIN).o: $(MAIN).cpp
+
+main.o: main.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
+car.o: car.cpp
+	$(CC) $(FLAGS) -c $^ -o $@
+
+roundabout.o: roundabout.cpp
+	$(CC) $(FLAGS) -c $^ -o $@
+
+
 # Run simulation
-run: $(MAIN).out
-	./$(MAIN).out
+run: main.out
+	./main.out
 
 # Run simulation with valgrind
-memcheck: $(MAIN).out
-	valgrind --leak-check=yes --track-origins=yes ./$(MAIN).out
+memcheck: main.out
+	valgrind --leak-check=yes --track-origins=yes ./main.out
 
 # Delete files generated in process
 clean:
