@@ -13,5 +13,9 @@ class Car {
     Car(Car &head);
     ~Car();
 
+    int get_v();
+    void set_v(int v);
+    int get_space();
+    bool get_is_tail();
     void print();
 };
