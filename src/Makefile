@@ -3,7 +3,7 @@ FLAGS = -g -Wall
 
 all: main.out
 
-main.out: main.o car.o roundabout.o
+main.out: main.o car.o roundabout.o helpers.o
 	$(CC) $(FLAGS) $^ -o $@
 
 
@@ -14,6 +14,9 @@ car.o: car.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
 roundabout.o: roundabout.cpp
+	$(CC) $(FLAGS) -c $^ -o $@
+
+helpers.o: helpers.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
 

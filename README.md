@@ -12,4 +12,6 @@ src -> Directory containing full source of an apllication
     - Car consisting of the head and tail
     - Transition function in circular motion
         - accelerate
+        - brake
         - move (with tails handling)
+    - Helper functions for future use
