@@ -23,8 +23,12 @@ int find_prev(std::vector<Car *> &lane, int idx) {
     int p_idx;
 
     idx = proper_idx(lane, idx);
-    idx = idx - lane[idx]->get_space() + 1;
-    idx = proper_idx(lane, idx);
+    // this gives option to check if there is no car
+    if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+        idx = idx - lane[idx]->get_space() + 1;
+        idx = proper_idx(lane, idx);
+    }
+
     for (int i = 1; i <= (int)lane.size(); i++) {
         p_idx = proper_idx(lane, idx - i);
         // if loop finds not nullptr it is prev car
