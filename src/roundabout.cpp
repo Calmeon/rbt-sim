@@ -138,12 +138,43 @@ void Roundabout::add_car(int entry, int v, int space, int destination) {
     entries[entry][0] = head;
 }
 
+void Roundabout::delete_tails_ee(std::map<int, std::vector<Car *>> &e) {
+    for (auto &pair : e) {
+        for (auto &car : pair.second) {
+            if (car != nullptr && car->get_is_tail()) {
+                delete car;
+                car = nullptr;
+            }
+        }
+    }
+}
+
 void Roundabout::delete_tails() {
     for (auto &lane : lanes) {
         for (auto &car : lane) {
             if (car != nullptr && car->get_is_tail()) {
                 delete car;
                 car = nullptr;
+            }
+        }
+    }
+    delete_tails_ee(entries);
+    delete_tails_ee(exits);
+}
+
+void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
+    int tail_idx;
+
+    for (auto &pair : e) {
+        std::vector<Car *> &lane = pair.second;
+        for (size_t idx = 0; idx < lane.size(); idx++) {
+            if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+                for (int t = 1; t < lane[idx]->get_space(); t++) {
+                    tail_idx = idx - t;
+                    if (tail_idx >= 0) {
+                        lane[tail_idx] = new Car(*lane[idx]);
+                    }
+                }
             }
         }
     }
@@ -162,12 +193,14 @@ void Roundabout::fix_tails() {
             }
         }
     }
+    fix_tails_ee(entries);
+    fix_tails_ee(exits);
 }
 
 // transition functions
 
 void Roundabout::generate_cars() {
-    int v, space, destination;
+    int v, space;
     for (auto &entry : entries) {
         if ((float)rand() / (float)RAND_MAX > entries_chances[entry.first] &&
             entry.second[0] == nullptr) {
@@ -179,12 +212,43 @@ void Roundabout::generate_cars() {
     }
 }
 
+void Roundabout::accelerate_ee(std::map<int, std::vector<Car *>> &e) {
+    for (auto &lane : e) {
+        for (auto &car : lane.second) {
+            if (car != nullptr && !car->get_is_tail()) {
+                if (car->get_v() < max_velocity) {
+                    car->set_v(car->get_v() + 1);
+                }
+            }
+        }
+    }
+}
+
 void Roundabout::accelerate() {
     for (auto &lane : lanes) {
         for (auto &car : lane) {
             if (car != nullptr && !car->get_is_tail()) {
                 if (car->get_v() < max_velocity) {
                     car->set_v(car->get_v() + 1);
+                }
+            }
+        }
+    }
+    accelerate_ee(entries);
+    accelerate_ee(exits);
+}
+
+void Roundabout::brake_ee(std::map<int, std::vector<Car *>> &e) {
+    int d_to_next;
+
+    for (auto &pair : e) {
+        std::vector<Car *> &lane = pair.second;
+        for (size_t idx = 0; idx < lane.size(); idx++) {
+            if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+                d_to_next = find_next(lane, idx);
+                // second check if for not breaking at the end of the lane
+                if (d_to_next < lane[idx]->get_v() && d_to_next < (int)(lane.size() - (idx + 1))) {
+                    lane[idx]->set_v(d_to_next);
                 }
             }
         }
@@ -204,15 +268,18 @@ void Roundabout::brake() {
             }
         }
     }
+    brake_ee(entries);
+    brake_ee(exits);
 }
 
-void Roundabout::move() {
+void Roundabout::move_ee(std::map<int, std::vector<Car *>> &e) {
     int next_idx;
 
-    delete_tails();
-    for (auto &lane : lanes) {
+    for (auto &pair : e) {
+        std::vector<Car *> &lane = pair.second;
         for (size_t idx = 0; idx < lane.size(); idx++) {
             if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+                // check if car was moved before
                 if (moved.find(lane[idx]) == moved.end()) {
                     next_idx = idx + lane[idx]->get_v();
                     next_idx = proper_idx(lane, next_idx);
@@ -223,6 +290,28 @@ void Roundabout::move() {
             }
         }
     }
+}
+
+void Roundabout::move() {
+    int next_idx;
+
+    delete_tails();
+    for (auto &lane : lanes) {
+        for (size_t idx = 0; idx < lane.size(); idx++) {
+            if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+                // check if car was moved before
+                if (moved.find(lane[idx]) == moved.end()) {
+                    next_idx = idx + lane[idx]->get_v();
+                    next_idx = proper_idx(lane, next_idx);
+                    lane[next_idx] = lane[idx];
+                    lane[idx] = nullptr;
+                    moved.insert(lane[next_idx]);
+                }
+            }
+        }
+    }
+    move_ee(entries);
+    move_ee(exits);
     fix_tails();
 }
 

@@ -14,7 +14,7 @@ int main() {
     rbt.add_car_rbt(0, 40, 3);
     rbt.print();
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
         rbt.simulate();
         rbt.print();
     }

@@ -30,12 +30,18 @@ class Roundabout {
 
     std::set<Car *> moved;  // helper set
 
+    // functions with ee sufix are for exits/entries
+    void delete_tails_ee(std::map<int, std::vector<Car *>> &e);
     void delete_tails();
+    void fix_tails_ee(std::map<int, std::vector<Car *>> &e);
     void fix_tails();
     // transition functions
     void generate_cars();
+    void accelerate_ee(std::map<int, std::vector<Car *>> &e);
     void accelerate();
+    void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();
+    void move_ee(std::map<int, std::vector<Car *>> &e);
     void move();
 
    public:
