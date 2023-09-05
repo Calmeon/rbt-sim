@@ -15,3 +15,5 @@ src -> Directory containing full source of an apllication
         - brake
         - move (with tails handling)
     - Helper functions for future use
+- Entries
+    - Generating cars (weighted random)
