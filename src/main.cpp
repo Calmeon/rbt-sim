@@ -7,17 +7,15 @@ int main() {
 
     std::map<int, float> entries{{3, 0.5}, {13, 0.5}};
     std::map<int, float> exits{{0, 0.5}, {10, 0.5}};
-    Roundabout rbt(5, entries, exits, 3, 9);
-    rbt.add_car_rbt(0, 6, 5);
-    rbt.add_car_rbt(0, 15, 4);
-    rbt.add_car_rbt(0, 20, 2);
-    rbt.add_car_rbt(0, 40, 3);
-    rbt.print();
+    Roundabout rbt(5, entries, exits, 3, 1);
 
-    for (int i = 0; i < 2; i++) {
-        rbt.simulate();
+    rbt.simulate(40);
+
+    for (int i = 0; i < 20; i++) {
         rbt.print();
+        rbt.simulate();
     }
+    rbt.print();
 
     return 0;
 }

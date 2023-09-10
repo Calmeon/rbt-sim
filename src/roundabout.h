@@ -41,6 +41,8 @@ class Roundabout {
     void accelerate();
     void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();
+    void enter();
+    void exit();
     void move_ee(std::map<int, std::vector<Car *>> &e);
     void move();
 
@@ -59,5 +61,7 @@ class Roundabout {
     void add_car(int entry, int v, int space, int destination);
     // one step of simulation
     void simulate();
+    // multiple steps of simulation
+    void simulate(int no_times);
     void print();
 };

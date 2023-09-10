@@ -18,5 +18,6 @@ src -> Directory containing full source of an apllication
 - Entries
     - Generating cars (weighted random)
     - Transition functions
+    - Enter functionality (with tails remaining on entries)
 - Exits
     - Transition functions
