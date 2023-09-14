@@ -17,4 +17,6 @@ class Car {
     void set_v(int v);
     int get_space();
     bool get_is_tail();
+    int get_starting_from();
+    int get_destination();
 };

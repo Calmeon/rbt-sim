@@ -1,17 +1,25 @@
+#include <iostream>
+#include <random>
+
 #include "roundabout.h"
+#include "settings.h"
 
 int main() {
-    Rounbabout rbt(5, 1, 9);
-    rbt.add_car(0, 6, 5);
-    rbt.add_car(0, 15, 4);
-    rbt.add_car(0, 20, 2);
-    rbt.add_car(0, 40, 3);
-    rbt.print();
+    srand(SEED);
+    std::cout << "Seed: " << SEED << std::endl;
 
-    for (int i = 0; i < 10; i++) {
-        rbt.simulate();
+    std::map<int, float> entries{{3, 0.5}, {13, 0.5}};
+    std::map<int, float> exits{{0, 0.5}, {10, 0.5}};
+    // Roundabout(island_radius, entries, exits, number_of_lanes = 1, max_velocity = 9, density = (1.0F), exits_entries_len = 50)
+    Roundabout rbt(5, entries, exits, 3, 9, 1.0, 50);
+
+    rbt.simulate(10);
+
+    for (int i = 0; i < 100; i++) {
         rbt.print();
+        rbt.simulate();
     }
+    rbt.print();
 
     return 0;
 }

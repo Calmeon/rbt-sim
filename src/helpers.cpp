@@ -1,5 +1,9 @@
 #include "helpers.h"
 
+#include <random>
+
+#include "settings.h"
+
 int proper_idx(std::vector<Car *> &lane, int idx) {
     int size = lane.size();
 
@@ -37,4 +41,19 @@ int find_prev(std::vector<Car *> &lane, int idx) {
         }
     }
     return lane.size() - 1;
+}
+
+int weighted_random_choice(std::map<int, float> &dict) {
+    std::mt19937 gen(SEED);
+
+    std::vector<int> values;
+    std::vector<float> weights;
+    for (auto &el : dict) {
+        values.push_back(el.first);
+        weights.push_back(el.second);
+    }
+
+    std::discrete_distribution<int> distribution(weights.begin(), weights.end());
+
+    return values[distribution(gen)];
 }

@@ -15,3 +15,12 @@ src -> Directory containing full source of an apllication
         - brake
         - move (with tails handling)
     - Helper functions for future use
+- Entries
+    - Generating cars (weighted random)
+    - Transition functions
+    - Enter functionality (with tails remaining on entries)
+- Exits
+    - Transition functions
+    - Tails remaining on roundabout lane
+    - Cars disappearing at the end
+- Deterministic model(can set up fixed seed)
