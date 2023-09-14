@@ -21,3 +21,4 @@ void Car::set_v(int v) { this->v = v; }
 int Car::get_space() { return space; }
 bool Car::get_is_tail() { return is_tail; }
 int Car::get_starting_from() { return starting_from; }
+int Car::get_destination() { return destination; }

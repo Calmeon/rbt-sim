@@ -4,6 +4,7 @@
 #include <iostream>
 #include <random>
 
+#include "car.h"
 #include "helpers.h"
 #include "settings.h"
 
@@ -83,13 +84,11 @@ void Roundabout::print() {
         }
         std::cout << std::endl;
     }
-    if (DEBUG) {
-        std::cout << "[db] ";
-        for (size_t i = 0; i < lanes[lanes.size() - 1].size(); i++) {
-            std::cout << i % 10;
-        }
-        std::cout << std::endl;
+    std::cout << "[db] ";
+    for (size_t i = 0; i < lanes[lanes.size() - 1].size(); i++) {
+        std::cout << i % 10;
     }
+    std::cout << std::endl;
 
     for (auto &entry : entries) {
         std::cout << "[ent" << entry.first << "] ";
@@ -324,21 +323,20 @@ void Roundabout::enter() {
                     break;
                 }
 
-                velocity_left = lane[idx]->get_v() - to_end;
-                // adjust velocity to turn manuver
-                if (velocity_left > TURN_VELOCITY) {
-                    velocity_left = TURN_VELOCITY;
-                }
-                if (lane[idx]->get_v() > TURN_VELOCITY) {
-                    lane[idx]->set_v(TURN_VELOCITY);
-                }
                 // adjust velocity to next car
                 distance_to_next = find_next(rbt_lane, pair.first - 1);
-                if (distance_to_next < velocity_left) {
-                    lane[idx]->set_v(distance_to_next + to_end);
-                    velocity_left = distance_to_next;
+                if (lane[idx]->get_v() > to_end + distance_to_next) {
+                    lane[idx]->set_v(to_end + distance_to_next);
                 }
-
+                // adjust velocity to turn manuver
+                velocity_left = lane[idx]->get_v() - to_end;
+                if (velocity_left > TURN_VELOCITY) {
+                    velocity_left = TURN_VELOCITY;
+                    lane[idx]->set_v(TURN_VELOCITY);
+                }
+                if (velocity_left == 0){
+                    std::cout<<"dupa"<<std::endl;
+                }
                 new_idx = lane[idx]->get_starting_from() + velocity_left - 1;
                 new_idx = proper_idx(rbt_lane, new_idx);
                 rbt_lane[new_idx] = lane[idx];

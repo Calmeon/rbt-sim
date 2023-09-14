@@ -21,3 +21,6 @@ src -> Directory containing full source of an apllication
     - Enter functionality (with tails remaining on entries)
 - Exits
     - Transition functions
+    - Tails remaining on roundabout lane
+    - Cars disappearing at the end
+- Deterministic model(can set up fixed seed)

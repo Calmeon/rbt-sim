@@ -2,6 +2,8 @@
 
 #include <random>
 
+#include "settings.h"
+
 int proper_idx(std::vector<Car *> &lane, int idx) {
     int size = lane.size();
 
@@ -42,8 +44,7 @@ int find_prev(std::vector<Car *> &lane, int idx) {
 }
 
 int weighted_random_choice(std::map<int, float> &dict) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(SEED);
 
     std::vector<int> values;
     std::vector<float> weights;

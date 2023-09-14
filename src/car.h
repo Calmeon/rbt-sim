@@ -18,4 +18,5 @@ class Car {
     int get_space();
     bool get_is_tail();
     int get_starting_from();
+    int get_destination();
 };
