@@ -17,11 +17,12 @@ int main() {
     rbt.set_saving(true);
 
     for (int i = 0; i < 10; i++) {
-        rbt.print();
+        // rbt.print();
         rbt.simulate();
     }
-    rbt.print();
+    // rbt.print();
     rbt.save_history();
+    rbt.plot();
 
     return 0;
 }

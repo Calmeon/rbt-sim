@@ -69,6 +69,7 @@ class Roundabout {
     void set_saving(bool save);
     void print();
     void save_history();
+    void plot();
     // one step of simulation
     void simulate();
     // multiple steps of simulation

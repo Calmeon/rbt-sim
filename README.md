@@ -24,5 +24,8 @@ src -> Directory containing full source of an apllication
     - Tails remaining on roundabout lane
     - Cars disappearing at the end
 - Deterministic model (can set up fixed seed)
-- Plots
+- Plots (Spacetime diagram)
     - Output text files from simulation 
+    - Folder structure
+    - Running python script for plots from main program
+    - Reading output.txt in python script

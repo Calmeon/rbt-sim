@@ -484,14 +484,27 @@ void Roundabout::print() {
 }
 
 void Roundabout::save_history() {
-    std::string directoryPath = "history";
+    // create history folder
+    std::string historyPath = "../history";
+    if (!std::filesystem::exists(historyPath)) {
+        std::filesystem::create_directory(historyPath);
+    }
+    // create seed folder
+    std::string directoryPath = "../history/" + std::to_string(SEED);
     if (!std::filesystem::exists(directoryPath)) {
         std::filesystem::create_directory(directoryPath);
     }
-    std::string filePath = directoryPath + "/" + std::to_string(SEED) + ".txt";
+
+    std::string filePath = directoryPath + "/output.txt";
     std::ofstream history_file(filePath);
+    history.pop_back();  // delete last \n
     history_file << history;
     history_file.close();
+}
+
+void Roundabout::plot() {
+    std::string python_script = "python3 plot.py " + std::to_string(SEED);
+    system(python_script.c_str());
 }
 
 void Roundabout::simulate() {

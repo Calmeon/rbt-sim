@@ -32,4 +32,4 @@
 *.app
 
 # Temporary files
-src/history
+history
