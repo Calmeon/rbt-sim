@@ -23,4 +23,6 @@ src -> Directory containing full source of an apllication
     - Transition functions
     - Tails remaining on roundabout lane
     - Cars disappearing at the end
-- Deterministic model(can set up fixed seed)
+- Deterministic model (can set up fixed seed)
+- Plots
+    - Output text files from simulation 

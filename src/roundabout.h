@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 #include "car.h"
@@ -30,6 +31,12 @@ class Roundabout {
 
     std::set<Car *> moved;  // helper set
 
+    bool saving;          // turns saving steps
+    std::string history;  // big string containing simulation history
+
+    // utility functions
+    std::string prepare_string();
+    void save();
     // functions with ee sufix are for exits/entries
     void delete_tails_ee(std::map<int, std::vector<Car *>> &e);
     void delete_tails();
@@ -59,9 +66,11 @@ class Roundabout {
 
     void add_car_rbt(int lane, int idx, int space = 3);
     void add_car(int entry, int v, int space, int destination);
+    void set_saving(bool save);
+    void print();
+    void save_history();
     // one step of simulation
     void simulate();
     // multiple steps of simulation
     void simulate(int no_times);
-    void print();
 };
