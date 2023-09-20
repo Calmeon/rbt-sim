@@ -3,6 +3,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 
@@ -13,10 +14,14 @@
 
 std::string Roundabout::prepare_string() {
     std::string result = "\n";
+    std::string s;
+    int intend = 10;
     int l = 0;
 
     for (auto &lane : lanes) {
-        result += "[l" + std::to_string(l++) + "] ";
+        s = "[l" + std::to_string(l++) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : lane) {
             if (car == nullptr) {
                 result += ".";
@@ -28,16 +33,11 @@ std::string Roundabout::prepare_string() {
         }
         result += "\n";
     }
-    if (DEBUG) {
-        result += "[db] ";
-        for (size_t i = 0; i < lanes[lanes.size() - 1].size(); i++) {
-            result += std::to_string(i % 10);
-        }
-        result += "\n";
-    }
 
     for (auto &entry : entries) {
-        result += "[ent" + std::to_string(entry.first) + "] ";
+        s = "[ent" + std::to_string(entry.first) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : entry.second) {
             if (car == nullptr) {
                 result += ".";
@@ -51,7 +51,9 @@ std::string Roundabout::prepare_string() {
     }
 
     for (auto &exit : exits) {
-        result += "[ext" + std::to_string(exit.first) + "] ";
+        s = "[ext" + std::to_string(exit.first) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : exit.second) {
             if (car == nullptr) {
                 result += ".";
@@ -503,7 +505,7 @@ void Roundabout::save_history() {
 }
 
 void Roundabout::plot() {
-    std::string python_script = "python3 plot.py " + std::to_string(SEED);
+    std::string python_script = "python3 spaceTime.py " + std::to_string(SEED);
     system(python_script.c_str());
 }
 
