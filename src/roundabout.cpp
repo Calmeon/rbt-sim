@@ -138,7 +138,8 @@ void Roundabout::fix_tails() {
                 space = lane[idx]->get_space() - 1;
                 tail_idx = proper_idx(lane, idx - 1);
                 while (space) {
-                    if (tail_idx == proper_idx(lane, lane[idx]->get_starting_from() - 1)) {
+                    if (tail_idx == proper_idx(lane, lane[idx]->get_starting_from() - 1) &&
+                        lane == lanes[lanes.size() - 1]) {
                         break;
                     }
                     lane[tail_idx] = new Car(*lane[idx]);

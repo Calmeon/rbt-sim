@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 import re
@@ -17,7 +18,7 @@ def read_file(filename):
     no_exits = int(values[2])
 
     # lanes
-    l = 3
+    l = 3  # first 3 lines in txt are part of header
     while l < len(lines):
         for lane in range(no_lanes):
             line = lines[l].strip().split()[1]
@@ -25,7 +26,7 @@ def read_file(filename):
             dict_key = f"Lane {lane}"
             if dict_key not in rbt_dict:
                 rbt_dict[dict_key] = []
-            rbt_dict[dict_key].append(line)
+            rbt_dict[dict_key].append(list(line))
             l += 1
 
         for lane in range(no_entries):
@@ -35,7 +36,7 @@ def read_file(filename):
             dict_key = f"Entry {entry_number}"
             if dict_key not in rbt_dict:
                 rbt_dict[dict_key] = []
-            rbt_dict[dict_key].append(line[1])
+            rbt_dict[dict_key].append(list(line[1]))
             l += 1
 
         for lane in range(no_exits):
@@ -45,7 +46,7 @@ def read_file(filename):
             dict_key = f"Exit {exit_number}"
             if dict_key not in rbt_dict:
                 rbt_dict[dict_key] = []
-            rbt_dict[dict_key].append(line[1])
+            rbt_dict[dict_key].append(list(line[1]))
             l += 1
 
         l += 1
@@ -58,37 +59,27 @@ def plot(folder_path, rbt_dict):
     if not Path(f"{folder_path}/").exists():
         Path(f"{folder_path}").mkdir()
 
-    colors = ["red", "gray", "green"]
+    for key in rbt_dict.keys():
+        lane = np.array(rbt_dict[key])
+        seconds = len(lane)
+        plt.figure(figsize=(len(lane[0])/10 ,seconds/10))
 
-    seconds = len(rbt_dict["Lane 0"])
-    for i, key in enumerate(rbt_dict.keys()):
-        for sec in range(seconds):
-            lane = rbt_dict[key][sec]
-            if i == 2:
-                plt.axhline(
-                    y=sec * 3 + i + 0.5, color="r", linestyle="-", linewidth=0.5
-                )
+        tails = (lane == ">").nonzero()
+        if len(tails) == 2:
+            plt.scatter(tails[1], tails[0],  c="gray", marker="3")
 
-            for idx, field in enumerate(lane):
-                if field == ">":
-                    plt.plot(
-                        idx, sec * 3 + i, marker=".", color=colors[i], markersize=1
-                    )
-                if field != ">" and field != ".":
-                    plt.plot(idx, sec * 3 + i, ".b", markersize=3)
-                if idx == len(lane) - 1:
-                    plt.plot(idx + 1, sec * 3 + i, "*r", markersize=3)
-        if i > 1:
-            break
+        heads = (np.bitwise_and(lane != ">", lane != ".")).nonzero()
+        if len(heads) == 2:
+            plt.scatter(heads[1], heads[0], c="blue", marker=">")
 
-    plt.xlabel("Driving direction")
-    plt.ylabel("Time")
-    plt.xlim(right=len(lane))
-    plt.ylim(top=seconds * 3)
-    plt.title("Roundabout lanes")
+        plt.xlabel("Driving direction")
+        plt.ylabel("Time")
+        plt.xlim(0, len(lane[0]))
+        plt.ylim(-0.5, seconds - 0.5)
+        plt.title(key)
 
-    plt.savefig(f"{folder_path}/plot.png", dpi=300)
-    plt.clf()
+        plt.savefig(f"{folder_path}/{key}.png")
+        plt.clf()
 
 
 seed = sys.argv[1]
