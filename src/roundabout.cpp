@@ -1,143 +1,76 @@
 #include "roundabout.h"
 
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <random>
 
 #include "helpers.h"
 #include "settings.h"
 
-Roundabout::Roundabout(
-    float island_radius,
-    std::map<int, float> &entries,
-    std::map<int, float> &exits,
-    int number_of_lanes,
-    int max_velocity,
-    float density,
-    int exits_entries_len) {
-    // add to island radius half of raod width
-    float radius = island_radius + ROAD_WIDTH / 2;
-    int length;
+// private functions
 
-    this->island_radius = island_radius;
-    this->max_velocity = max_velocity;
-    this->density = density;
-    this->second = 0;
-
-    // calculate and initialize lanes
-    // from circle circuit formula assign appropiate lengths
-    for (int lane = 0; lane < number_of_lanes; lane++) {
-        length = 2 * M_PI * (radius + ROAD_WIDTH * lane);
-        this->lanes.push_back(std::vector<Car *>(length, nullptr));
-    }
-    // initialize entries
-    for (auto &entry : entries) {
-        this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->entries_chances[entry.first] = entry.second;
-    }
-    // initialize exits
-    for (auto &exit : exits) {
-        this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->exits_chances[exit.first] = exit.second;
-    }
-}
-
-Roundabout::~Roundabout() {
-    for (auto &lane : lanes) {
-        for (auto &car : lane) {
-            if (car != nullptr) {
-                delete car;
-            }
-        }
-    }
-
-    for (auto &lane : entries) {
-        for (auto &car : lane.second) {
-            if (car != nullptr) {
-                delete car;
-            }
-        }
-    }
-
-    for (auto &lane : exits) {
-        for (auto &car : lane.second) {
-            if (car != nullptr) {
-                delete car;
-            }
-        }
-    }
-}
-
-void Roundabout::print() {
+std::string Roundabout::prepare_string() {
+    std::string result = "\n";
+    std::string s;
+    int intend = 10;
     int l = 0;
+
     for (auto &lane : lanes) {
-        std::cout << "[l" << l++ << "] ";
+        s = "[l" + std::to_string(l++) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : lane) {
             if (car == nullptr) {
-                std::cout << ".";
+                result += ".";
             } else if (car->get_is_tail()) {
-                std::cout << ">";
+                result += ">";
             } else {
-                std::cout << car->get_v();
+                result += std::to_string(car->get_v());
             }
         }
-        std::cout << std::endl;
-    }
-    if (DEBUG) {
-        std::cout << "[db] ";
-        for (size_t i = 0; i < lanes[lanes.size() - 1].size(); i++) {
-            std::cout << i % 10;
-        }
-        std::cout << std::endl;
+        result += "\n";
     }
 
     for (auto &entry : entries) {
-        std::cout << "[ent" << entry.first << "] ";
+        s = "[ent" + std::to_string(entry.first) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : entry.second) {
             if (car == nullptr) {
-                std::cout << ".";
+                result += ".";
             } else if (car->get_is_tail()) {
-                std::cout << ">";
+                result += ">";
             } else {
-                std::cout << car->get_v();
+                result += std::to_string(car->get_v());
             }
         }
-        std::cout << std::endl;
+        result += "\n";
     }
 
     for (auto &exit : exits) {
-        std::cout << "[ext" << exit.first << "] ";
+        s = "[ext" + std::to_string(exit.first) + "] ";
+        s.insert(s.end(), intend - s.size(), ' ');
+        result += s;
         for (auto &car : exit.second) {
             if (car == nullptr) {
-                std::cout << ".";
+                result += ".";
             } else if (car->get_is_tail()) {
-                std::cout << ">";
+                result += ">";
             } else {
-                std::cout << car->get_v();
+                result += std::to_string(car->get_v());
             }
         }
-        std::cout << std::endl;
+        result += "\n";
     }
-    std::cout << std::endl;
+
+    return result;
 }
 
-void Roundabout::add_car_rbt(int lane, int idx, int space) {
-    Car *head = new Car(0, space, -1, -1);
-    Car *tail;
-    int tail_idx;
-
-    idx = proper_idx(lanes[lane], idx);
-    lanes[lane][idx] = head;
-
-    for (int i = 1; i < space; i++) {
-        tail = new Car(*head);
-        tail_idx = proper_idx(lanes[lane], idx - i);
-        lanes[lane][tail_idx] = tail;
-    }
-}
-
-void Roundabout::add_car(int entry, int v, int space, int destination) {
-    entries[entry][0] = new Car(v, space, destination, entry);
+void Roundabout::save() {
+    history += prepare_string();
 }
 
 void Roundabout::delete_tails_ee(std::map<int, std::vector<Car *>> &e) {
@@ -205,7 +138,8 @@ void Roundabout::fix_tails() {
                 space = lane[idx]->get_space() - 1;
                 tail_idx = proper_idx(lane, idx - 1);
                 while (space) {
-                    if (tail_idx == proper_idx(lane, lane[idx]->get_starting_from() - 1)) {
+                    if (tail_idx == proper_idx(lane, lane[idx]->get_starting_from() - 1) &&
+                        lane == lanes[lanes.size() - 1]) {
                         break;
                     }
                     lane[tail_idx] = new Car(*lane[idx]);
@@ -456,7 +390,129 @@ void Roundabout::move() {
     fix_tails();
 }
 
+// Public Functions
+
+Roundabout::Roundabout(
+    float island_radius,
+    std::map<int, float> &entries,
+    std::map<int, float> &exits,
+    int number_of_lanes,
+    int max_velocity,
+    float density,
+    int exits_entries_len) {
+    // add to island radius half of raod width
+    float radius = island_radius + ROAD_WIDTH / 2;
+    int length;
+
+    this->island_radius = island_radius;
+    this->max_velocity = max_velocity;
+    this->density = density;
+    this->second = 0;
+
+    // calculate and initialize lanes
+    // from circle circuit formula assign appropiate lengths
+    for (int lane = 0; lane < number_of_lanes; lane++) {
+        length = 2 * M_PI * (radius + ROAD_WIDTH * lane);
+        this->lanes.push_back(std::vector<Car *>(length, nullptr));
+    }
+    // initialize entries
+    for (auto &entry : entries) {
+        this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->entries_chances[entry.first] = entry.second;
+    }
+    // initialize exits
+    for (auto &exit : exits) {
+        this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->exits_chances[exit.first] = exit.second;
+    }
+    // setup history string
+    this->history += "No. lanes,\tNo. entries,\tNo.exits\n" +
+                     std::to_string(number_of_lanes) + "," +
+                     std::to_string(entries.size()) + "," +
+                     std::to_string(exits.size()) + "\n";
+    this->saving = false;
+}
+
+Roundabout::~Roundabout() {
+    for (auto &lane : lanes) {
+        for (auto &car : lane) {
+            if (car != nullptr) {
+                delete car;
+            }
+        }
+    }
+
+    for (auto &lane : entries) {
+        for (auto &car : lane.second) {
+            if (car != nullptr) {
+                delete car;
+            }
+        }
+    }
+
+    for (auto &lane : exits) {
+        for (auto &car : lane.second) {
+            if (car != nullptr) {
+                delete car;
+            }
+        }
+    }
+}
+
+void Roundabout::add_car_rbt(int lane, int idx, int space) {
+    Car *head = new Car(0, space, -1, -1);
+    Car *tail;
+    int tail_idx;
+
+    idx = proper_idx(lanes[lane], idx);
+    lanes[lane][idx] = head;
+
+    for (int i = 1; i < space; i++) {
+        tail = new Car(*head);
+        tail_idx = proper_idx(lanes[lane], idx - i);
+        lanes[lane][tail_idx] = tail;
+    }
+}
+
+void Roundabout::add_car(int entry, int v, int space, int destination) {
+    entries[entry][0] = new Car(v, space, destination, entry);
+}
+
+void Roundabout::set_saving(bool save) {
+    saving = save;
+}
+
+void Roundabout::print() {
+    std::cout << prepare_string();
+}
+
+void Roundabout::save_history() {
+    // create history folder
+    std::string historyPath = "../history";
+    if (!std::filesystem::exists(historyPath)) {
+        std::filesystem::create_directory(historyPath);
+    }
+    // create seed folder
+    std::string directoryPath = "../history/" + std::to_string(SEED);
+    if (!std::filesystem::exists(directoryPath)) {
+        std::filesystem::create_directory(directoryPath);
+    }
+
+    std::string filePath = directoryPath + "/output.txt";
+    std::ofstream history_file(filePath);
+    history.pop_back();  // delete last \n
+    history_file << history;
+    history_file.close();
+}
+
+void Roundabout::plot() {
+    std::string python_script = "python3 spaceTime.py " + std::to_string(SEED);
+    system(python_script.c_str());
+}
+
 void Roundabout::simulate() {
+    if (saving) save();
+
     generate_cars();
     accelerate();
     brake();

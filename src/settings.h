@@ -2,8 +2,6 @@
 
 #include <map>
 
-#define DEBUG false
-
 #define ROAD_WIDTH 3.0
 #define TURN_VELOCITY 3
 #define SEED time(NULL)

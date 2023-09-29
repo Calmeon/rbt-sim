@@ -23,4 +23,9 @@ src -> Directory containing full source of an apllication
     - Transition functions
     - Tails remaining on roundabout lane
     - Cars disappearing at the end
-- Deterministic model(can set up fixed seed)
+- Deterministic model (can set up fixed seed)
+- Plots (Spacetime diagram)
+    - Output text files from simulation 
+    - Folder structure
+    - Running python script for plots from main program
+    - Reading output.txt in python script

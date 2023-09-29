@@ -13,13 +13,16 @@ int main() {
     // Roundabout(island_radius, entries, exits, number_of_lanes = 1, max_velocity = 9, density = (1.0F), exits_entries_len = 50)
     Roundabout rbt(5, entries, exits, 3, 9, 1.0, 50);
 
-    rbt.simulate(10);
+    rbt.simulate(200);
+    rbt.set_saving(true);
 
-    for (int i = 0; i < 100; i++) {
-        rbt.print();
+    for (int i = 0; i < 10; i++) {
+        // rbt.print();
         rbt.simulate();
     }
-    rbt.print();
+    // rbt.print();
+    rbt.save_history();
+    rbt.plot();
 
     return 0;
 }
