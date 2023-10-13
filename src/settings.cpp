@@ -1,3 +1,3 @@
 #include "settings.h"
 
-std::map<int, float> cars_sizes{{4, 0.05}, {6, 0.5}, {8, 0.45}, {10, 0.1}};
+std::map<int, int> cars_sizes{{4, 5}, {6, 50}, {8, 45}, {10, 10}};

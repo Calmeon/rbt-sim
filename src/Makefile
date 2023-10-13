@@ -34,4 +34,7 @@ memcheck: main.out
 # Delete files generated in process
 clean:
 	rm -f *.o  *.out
+
+# Delete history files
+clean_history:
 	rm -r -f ../history

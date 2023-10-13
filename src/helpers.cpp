@@ -43,17 +43,35 @@ int find_prev(std::vector<Car *> &lane, int idx) {
     return lane.size() - 1;
 }
 
-int weighted_random_choice(std::map<int, float> &dict) {
-    std::mt19937 gen(SEED);
+/*
+ * Return random number based on weights
+ * Function sums weights draws random number in that range
+ * and checks where it lands in distribution array
+ * ex.
+ * values =               [ 1,  2,  3,  4,  5]
+ * weights =              [20, 50, 10,  5, 13]
+ * weights_distribution = [20, 70, 80, 85, 98]
+ * random_number = 76
+ * it lands between 70 and 80 so function returns 2
+ */
+int weighted_random_choice(std::map<int, int> &dict) {
+    std::vector<int> values, weights_distribution;
+    int random_number;
+    int weight_sum = 0;
 
-    std::vector<int> values;
-    std::vector<float> weights;
     for (auto &el : dict) {
         values.push_back(el.first);
-        weights.push_back(el.second);
+        weight_sum += el.second;
+        weights_distribution.push_back(weight_sum);
     }
 
-    std::discrete_distribution<int> distribution(weights.begin(), weights.end());
+    random_number = rand() % weight_sum;
+    for (int idx = 0; idx < (int)weights_distribution.size(); idx++) {
+        if (random_number <= weights_distribution[idx]) {
+            return values[idx];
+        }
+    }
 
-    return values[distribution(gen)];
+    // In case function fails just pick random from values
+    return values[rand() % ((int)values.size() - 1)];
 }

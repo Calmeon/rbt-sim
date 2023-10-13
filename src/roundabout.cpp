@@ -162,7 +162,7 @@ void Roundabout::fix_tails() {
 void Roundabout::generate_cars() {
     int v, space, destination;
     for (auto &entry : entries) {
-        if ((float)rand() / (float)RAND_MAX > entries_chances[entry.first] &&
+        if ((float)rand() / (float)RAND_MAX < entries_chances[entry.first] &&
             entry.second[0] == nullptr) {
             v = rand() % (max_velocity + 1);
             space = weighted_random_choice(cars_sizes);
@@ -196,6 +196,60 @@ void Roundabout::accelerate() {
     }
     accelerate_ee(entries);
     accelerate_ee(exits);
+}
+
+int Roundabout::calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane) {
+    if (current_lane == destination_lane) return car_idx;
+    int new_idx = (int)round((double)lanes[destination_lane].size() / (double)lanes[current_lane].size() * ((double)car_idx + 1));
+    return proper_idx(lanes[destination_lane], new_idx);
+}
+
+int Roundabout::change_lane_decision(int car_idx, int current_lane) {
+    int no_lanes = (int)lanes.size();
+    int outer_lane_idx = no_lanes - 1;
+
+    int outer_pos = calculate_another_lane_idx(car_idx, current_lane, outer_lane_idx);
+    double l = proper_idx(lanes[outer_lane_idx], lanes[current_lane][car_idx]->get_destination() - outer_pos);
+
+    int decision = (int)floor((l / (double)lanes[outer_lane_idx].size()) * (double)no_lanes);
+    decision = outer_lane_idx - decision;
+    return decision;
+}
+
+void Roundabout::change_lanes() {
+    int decision, d_to_prev, new_idx;
+    std::set<Car *> changed;
+
+    for (int lane = 0; lane < (int)lanes.size(); lane++) {
+        for (int idx = 0; idx < (int)lanes[lane].size(); idx++) {
+            Car *car = lanes[lane][idx];
+            if (car != nullptr && !car->get_is_tail() && changed.find(car) == changed.end()) {
+                decision = change_lane_decision(idx, lane);
+                if (decision != lane) {
+                    new_idx = calculate_another_lane_idx(idx, lane, decision);
+                    d_to_prev = find_prev(lanes[decision], new_idx);
+
+                    if (lanes[decision][new_idx] == nullptr && d_to_prev >= car->get_space()) {
+                        // std::cout << "(" << lane << ") " << idx << " : (" << decision << ") " << new_idx << " d prev: " << d_to_prev << std::endl;
+                        lanes[decision][new_idx] = car;
+                        lanes[lane][idx] = nullptr;
+                    }
+                    int no_lanes = (int)lanes.size();
+                    int outer_lane_idx = no_lanes - 1;
+
+                    int outer_pos = calculate_another_lane_idx(idx, lane, outer_lane_idx);
+                    double l = proper_idx(lanes[outer_lane_idx], car->get_destination() - outer_pos);
+                    if (l < 0.1 * (int)lanes[outer_lane_idx].size()) {
+                        car->set_v(0);
+                        moved.insert(car);
+                    }
+                    delete_tails();
+                    fix_tails();
+                }
+                changed.insert(car);
+            }
+        }
+    }
 }
 
 void Roundabout::brake_ee(std::map<int, std::vector<Car *>> &e) {
@@ -506,6 +560,9 @@ void Roundabout::save_history() {
 }
 
 void Roundabout::plot() {
+    std::cout << "Creating plots..." << std::endl;
+    if (!saving) return;
+    save_history();
     std::string python_script = "python3 spaceTime.py " + std::to_string(SEED);
     system(python_script.c_str());
 }
@@ -515,6 +572,7 @@ void Roundabout::simulate() {
 
     generate_cars();
     accelerate();
+    change_lanes();
     brake();
     exit();
     enter();

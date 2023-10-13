@@ -25,9 +25,9 @@ class Roundabout {
     std::map<int, std::vector<Car *>> entries;
     std::map<int, std::vector<Car *>> exits;
 
-    // key - where, value - chance(0-1)
-    std::map<int, float> entries_chances;
-    std::map<int, float> exits_chances;
+    // key - where, value - chance(0-100)
+    std::map<int, int> entries_chances;
+    std::map<int, int> exits_chances;
 
     std::set<Car *> moved;  // helper set
 
@@ -46,6 +46,9 @@ class Roundabout {
     void generate_cars();
     void accelerate_ee(std::map<int, std::vector<Car *>> &e);
     void accelerate();
+    int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane);
+    int change_lane_decision(int car_idx, int lane_number);
+    void change_lanes();
     void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();
     void enter();
