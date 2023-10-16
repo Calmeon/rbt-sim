@@ -10,7 +10,7 @@
 class Roundabout {
     float island_radius;  // roundabout island radius in m
     int max_velocity;     // max velocity in m/s
-    float density;        // car denisty on the road <0,1>
+    int density;          // car denisty on the road <0,100>
     int second;           // second of simulation (no. steps)
     /*
      * 2D vector with rbt lanes
@@ -63,7 +63,7 @@ class Roundabout {
         std::map<int, float> &exits,
         int number_of_lanes = 1,
         int max_velocity = 9,
-        float density = 1,
+        int density = 100,
         int exits_entries_len = 50);
     ~Roundabout();
 

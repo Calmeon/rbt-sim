@@ -200,7 +200,8 @@ void Roundabout::accelerate() {
 
 int Roundabout::calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane) {
     if (current_lane == destination_lane) return car_idx;
-    int new_idx = (int)round((double)lanes[destination_lane].size() / (double)lanes[current_lane].size() * ((double)car_idx + 1));
+    // abs part is for adding distance so that it would be less like teleporting, more like driving
+    int new_idx = (int)round((double)lanes[destination_lane].size() / (double)lanes[current_lane].size() * ((double)car_idx + abs(destination_lane-current_lane)));
     return proper_idx(lanes[destination_lane], new_idx);
 }
 
@@ -452,7 +453,7 @@ Roundabout::Roundabout(
     std::map<int, float> &exits,
     int number_of_lanes,
     int max_velocity,
-    float density,
+    int density,
     int exits_entries_len) {
     // add to island radius half of raod width
     float radius = island_radius + ROAD_WIDTH / 2;
@@ -463,12 +464,20 @@ Roundabout::Roundabout(
     this->density = density;
     this->second = 0;
 
+    // setup history string
+    this->history += "No.lanes,No.entries,No.exits,Lanes lengths\n" +
+                     std::to_string(number_of_lanes) + "," +
+                     std::to_string(entries.size()) + "," +
+                     std::to_string(exits.size());
+
     // calculate and initialize lanes
     // from circle circuit formula assign appropiate lengths
     for (int lane = 0; lane < number_of_lanes; lane++) {
         length = 2 * M_PI * (radius + ROAD_WIDTH * lane);
         this->lanes.push_back(std::vector<Car *>(length, nullptr));
+        this->history += "," + std::to_string(length);
     }
+    this->history += "\n";
     // initialize entries
     for (auto &entry : entries) {
         this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
@@ -479,11 +488,6 @@ Roundabout::Roundabout(
         this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
         this->exits_chances[exit.first] = exit.second;
     }
-    // setup history string
-    this->history += "No. lanes,\tNo. entries,\tNo.exits\n" +
-                     std::to_string(number_of_lanes) + "," +
-                     std::to_string(entries.size()) + "," +
-                     std::to_string(exits.size()) + "\n";
     this->saving = false;
 }
 
