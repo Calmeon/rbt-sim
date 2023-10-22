@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include "car.h"
@@ -15,3 +16,5 @@ int find_next(std::vector<Car *> &lane, int idx);
 int find_prev(std::vector<Car *> &lane, int idx);
 
 int weighted_random_choice(std::map<int, int> &dict);
+
+std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int intend = 10);

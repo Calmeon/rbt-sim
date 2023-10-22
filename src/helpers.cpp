@@ -6,7 +6,6 @@
 
 int proper_idx(std::vector<Car *> &lane, int idx) {
     int size = lane.size();
-
     return (idx + size) % size;
 }
 
@@ -16,9 +15,7 @@ int find_next(std::vector<Car *> &lane, int idx) {
     for (int i = 1; i <= (int)lane.size(); i++) {
         p_idx = proper_idx(lane, idx + i);
         // if loop finds not nullptr it is next car
-        if (lane[p_idx]) {
-            return i - 1;
-        }
+        if (lane[p_idx]) return i - 1;
     }
     return lane.size() - 1;
 }
@@ -28,7 +25,7 @@ int find_prev(std::vector<Car *> &lane, int idx) {
 
     idx = proper_idx(lane, idx);
     // this gives option to check if there is no car
-    if (lane[idx] != nullptr && !lane[idx]->get_is_tail()) {
+    if (lane[idx] && !lane[idx]->get_is_tail()) {
         idx = idx - lane[idx]->get_space() + 1;
         idx = proper_idx(lane, idx);
     }
@@ -67,11 +64,28 @@ int weighted_random_choice(std::map<int, int> &dict) {
 
     random_number = rand() % weight_sum;
     for (int idx = 0; idx < (int)weights_distribution.size(); idx++) {
-        if (random_number <= weights_distribution[idx]) {
-            return values[idx];
-        }
+        if (random_number <= weights_distribution[idx]) return values[idx];
     }
 
     // In case function fails just pick random from values
     return values[rand() % ((int)values.size() - 1)];
+}
+
+std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int intend) {
+    std::string result = "";
+
+    s.insert(s.end(), intend - s.size(), ' ');
+    result += s;
+    for (auto &car : lane) {
+        if (!car) {
+            result += ".";
+        } else if (car->get_is_tail()) {
+            result += ">";
+        } else {
+            result += std::to_string(car->get_v());
+        }
+    }
+    result += "\n";
+
+    return result;
 }

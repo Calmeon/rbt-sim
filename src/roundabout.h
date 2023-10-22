@@ -44,10 +44,11 @@ class Roundabout {
     void fix_tails();
     // transition functions
     void generate_cars();
+    void accelerate_car(Car *car);
     void accelerate_ee(std::map<int, std::vector<Car *>> &e);
     void accelerate();
-    int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane);
-    int change_lane_decision(int car_idx, int lane_number);
+    int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
+    int change_lane_decision(int car_idx, int lane_number, int v);
     void change_lanes();
     void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();
@@ -55,6 +56,7 @@ class Roundabout {
     void exit();
     void move_ee(std::map<int, std::vector<Car *>> &e);
     void move();
+    void delete_cars(std::vector<Car *> &lane);
 
    public:
     Roundabout(

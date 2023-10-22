@@ -65,12 +65,7 @@ def proper_idx(lane_length, idx):
 def calculate_another_lane_idx(idx, destination_lane, lanes_lengths):
     if destination_lane == (len(lanes_lengths) - 1):
         return idx
-
-    new_idx = round(
-        lanes_lengths[destination_lane]
-        / lanes_lengths[-1]
-        * (idx + abs(destination_lane - (len(lanes_lengths) - 1)))
-    )
+    new_idx = round(lanes_lengths[destination_lane] / lanes_lengths[-1] * idx)
     return proper_idx(lanes_lengths[destination_lane], new_idx)
 
 
