@@ -36,7 +36,7 @@ void Roundabout::save() { history += prepare_string(); }
 void Roundabout::delete_tails_ee(std::map<int, std::vector<Car *>> &e) {
     for (auto &pair : e) {
         for (auto &car : pair.second) {
-            if (car && car->get_is_tail()) {
+            if (is_tail(car)) {
                 delete car;
                 car = nullptr;
             }
@@ -47,7 +47,7 @@ void Roundabout::delete_tails_ee(std::map<int, std::vector<Car *>> &e) {
 void Roundabout::delete_tails() {
     for (auto &lane : lanes) {
         for (auto &car : lane) {
-            if (car && car->get_is_tail()) {
+            if (is_tail(car)) {
                 delete car;
                 car = nullptr;
             }
@@ -63,7 +63,7 @@ void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
     for (auto &pair : e) {
         std::vector<Car *> &lane = pair.second;
         for (size_t idx = 0; idx < lane.size(); idx++) {
-            if (lane[idx] && !lane[idx]->get_is_tail()) {
+            if (is_head(lane[idx])) {
                 space = lane[idx]->get_space() - 1;
                 tail_idx = idx - 1;
                 while (space) {
@@ -92,7 +92,7 @@ void Roundabout::fix_tails() {
 
     for (auto &lane : lanes) {
         for (size_t idx = 0; idx < lane.size(); idx++) {
-            if (lane[idx] && !lane[idx]->get_is_tail()) {
+            if (is_head(lane[idx])) {
                 space = lane[idx]->get_space() - 1;
                 tail_idx = proper_idx(lane, idx - 1);
                 while (space) {
@@ -127,7 +127,7 @@ void Roundabout::generate_cars() {
 }
 
 void Roundabout::accelerate_car(Car *car) {
-    if (car && !car->get_is_tail() && car->get_v() < max_velocity) {
+    if (is_head(car) && car->get_v() < max_velocity) {
         car->set_v(car->get_v() + 1);
         car->set_v_used(0);
     }
@@ -164,30 +164,40 @@ int Roundabout::change_lane_decision(int car_idx, int current_lane, int v) {
 
     int decision = (int)floor((l / (double)lanes[outer_lane_idx].size()) * (double)no_lanes);
     decision = outer_lane_idx - decision;
+    // as changing lanes is dependant on velocity available
+    if (abs(decision - current_lane) > v)
+        decision = current_lane + (decision > current_lane ? v : -v);
+
     return decision;
 }
 
 void Roundabout::change_lanes() {
-    int decision, d_to_prev, new_idx, no_lanes, outer_lane_idx, outer_pos;
+    int decision, d_to_prev, new_idx, outer_lane_idx, outer_pos;
     double l, wait_percent = 0.1;
-    Car *car;
+    Car *car, *prev;
     std::set<Car *> changed;
 
     for (int lane = 0; lane < (int)lanes.size(); lane++) {
         for (int idx = 0; idx < (int)lanes[lane].size(); idx++) {
-            if ((car = lanes[lane][idx]) && !car->get_is_tail() && changed.find(car) == changed.end()) {
-                decision = change_lane_decision(idx, lane, car->get_v());
+            car = lanes[lane][idx];
+            if (is_head(car) && changed.find(car) == changed.end()) {
+                decision = change_lane_decision(idx, lane, 1);
                 if (decision != lane) {
                     new_idx = calculate_another_lane_idx(idx, lane, decision);
                     d_to_prev = find_prev(lanes[decision], new_idx);
-
-                    if (!lanes[decision][new_idx] && d_to_prev >= car->get_space()) {
+                    prev = lanes[decision][proper_idx(lanes[decision], new_idx - d_to_prev - 1)];
+                    // check if previous car wouldn't crash into me
+                    if (is_head(prev) &&
+                        prev->get_v() - prev->get_v_used() > d_to_prev - (car->get_space() - 1)) {
+                        goto jmp;
+                    }
+                    if (!lanes[decision][new_idx] && d_to_prev >= car->get_space() - 1) {
                         lanes[decision][new_idx] = car;
+                        car->set_v_used(1);
                         lanes[lane][idx] = nullptr;
                     }
-                    no_lanes = (int)lanes.size();
-                    outer_lane_idx = no_lanes - 1;
 
+                    outer_lane_idx = (int)lanes.size() - 1;
                     outer_pos = calculate_another_lane_idx(idx, lane, outer_lane_idx);
                     l = proper_idx(lanes[outer_lane_idx], car->get_destination() - outer_pos);
                     if (l < wait_percent * (int)lanes[outer_lane_idx].size()) {
@@ -199,6 +209,7 @@ void Roundabout::change_lanes() {
                 }
                 changed.insert(car);
             }
+        jmp:;
         }
     }
 }
@@ -209,10 +220,11 @@ void Roundabout::brake_ee(std::map<int, std::vector<Car *>> &e) {
     for (auto &pair : e) {
         std::vector<Car *> &lane = pair.second;
         for (size_t idx = 0; idx < lane.size(); idx++) {
-            if (lane[idx] && !lane[idx]->get_is_tail()) {
+            if (is_head(lane[idx])) {
                 d_to_next = find_next(lane, idx);
                 // second check if not breaking at the end of the lane
-                if (d_to_next < lane[idx]->get_v() && d_to_next < (int)(lane.size() - (idx + 1))) lane[idx]->set_v(d_to_next);
+                if (d_to_next < lane[idx]->get_v() && d_to_next < (int)(lane.size() - (idx + 1)))
+                    lane[idx]->set_v(d_to_next);
             }
         }
     }
@@ -223,7 +235,7 @@ void Roundabout::brake() {
 
     for (auto &lane : lanes) {
         for (size_t idx = 0; idx < lane.size(); idx++) {
-            if (lane[idx] && !lane[idx]->get_is_tail()) {
+            if (is_head(lane[idx])) {
                 d_to_next = find_next(lane, idx);
                 if (d_to_next < lane[idx]->get_v()) lane[idx]->set_v(d_to_next);
             }
@@ -239,7 +251,7 @@ void Roundabout::enter() {
     for (auto &pair : entries) {
         std::vector<Car *> &lane = pair.second;
         for (int idx = lane.size() - 1; idx >= 0; idx--) {
-            if (lane[idx] && !lane[idx]->get_is_tail()) {
+            if (is_head(lane[idx])) {
                 to_end = lane.size() - 1 - idx;
                 // if its velocity is lesser than length of entry line
                 if (lane[idx]->get_v() <= to_end) break;
@@ -299,7 +311,8 @@ void Roundabout::exit() {
 
     std::vector<Car *> &rbt_lane = lanes[lanes.size() - 1];
     for (int idx = 0; idx < (int)rbt_lane.size(); idx++) {
-        if ((car = rbt_lane[idx]) && !car->get_is_tail() &&
+        car = rbt_lane[idx];
+        if (is_head(car) &&
             proper_idx(rbt_lane, car->get_destination() - idx) < car->get_v() &&
             moved.find(car) == moved.end()) {
             to_entry = proper_idx(rbt_lane, car->get_destination() - idx);
@@ -339,8 +352,8 @@ void Roundabout::move_ee(std::map<int, std::vector<Car *>> &e) {
         std::vector<Car *> &lane = pair.second;
         for (size_t idx = 0; idx < lane.size(); idx++) {
             // check if car was moved before
-            if (lane[idx] && !lane[idx]->get_is_tail() && moved.find(lane[idx]) == moved.end()) {
-                next_idx = idx + lane[idx]->get_v();
+            if (is_head(lane[idx]) && moved.find(lane[idx]) == moved.end()) {
+                next_idx = idx + lane[idx]->get_v() - lane[idx]->get_v_used();
 
                 if (e == exits && next_idx >= (int)lane.size()) {
                     delete lane[idx];
@@ -364,8 +377,8 @@ void Roundabout::move() {
     for (auto &lane : lanes) {
         for (size_t idx = 0; idx < lane.size(); idx++) {
             // check if car was moved before
-            if (lane[idx] && !lane[idx]->get_is_tail() && moved.find(lane[idx]) == moved.end()) {
-                next_idx = idx + lane[idx]->get_v();
+            if (is_head(lane[idx]) && moved.find(lane[idx]) == moved.end()) {
+                next_idx = idx + lane[idx]->get_v() - lane[idx]->get_v_used();
                 next_idx = proper_idx(lane, next_idx);
 
                 temp = lane[idx];
@@ -474,7 +487,7 @@ void Roundabout::save_history() {
     if (!std::filesystem::exists(historyPath)) std::filesystem::create_directory(historyPath);
 
     // create seed folder
-    std::string directoryPath = "../history/" + std::to_string(SEED);
+    std::string directoryPath = "../history/" + std::to_string(seed);
     if (!std::filesystem::exists(directoryPath)) std::filesystem::create_directory(directoryPath);
 
     std::string filePath = directoryPath + "/output.txt";
@@ -488,7 +501,7 @@ void Roundabout::plot() {
     if (!saving) return;
     std::cout << "Creating plots..." << std::endl;
     save_history();
-    std::string python_script = "python3 spaceTime.py " + std::to_string(SEED);
+    std::string python_script = "python3 spaceTime.py " + std::to_string(seed);
     system(python_script.c_str());
 }
 

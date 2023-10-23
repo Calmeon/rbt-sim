@@ -4,6 +4,6 @@
 
 #define ROAD_WIDTH 3.0
 #define TURN_VELOCITY 9
-#define SEED time(NULL)
+extern int seed;
 // key - size of car, value - rarity(0-100)
 extern std::map<int, int> cars_sizes;

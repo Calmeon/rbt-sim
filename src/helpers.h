@@ -6,6 +6,8 @@
 
 #include "car.h"
 
+bool is_head(Car *car);
+bool is_tail(Car *car);
 // corrects bad indexes (negative or beyond)
 int proper_idx(std::vector<Car *> &lane, int idx);
 
