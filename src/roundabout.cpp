@@ -89,21 +89,25 @@ void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
 
 void Roundabout::fix_tails() {
     int tail_idx, space;
+    Car *car;
 
     for (auto &lane : lanes) {
         for (size_t idx = 0; idx < lane.size(); idx++) {
-            if (is_head(lane[idx])) {
-                space = lane[idx]->get_space() - 1;
+            car = lane[idx];
+            if (is_head(car)) {
+                space = car->get_space() - 1;
                 tail_idx = proper_idx(lane, idx - 1);
                 while (space) {
-                    if (tail_idx == proper_idx(lane, lane[idx]->get_starting_from() - 1) && lane == lanes[lanes.size() - 1]) break;
-                    lane[tail_idx] = new Car(*lane[idx]);
+                    if (tail_idx == proper_idx(lane, car->get_starting_from() - 1) && lane == lanes[lanes.size() - 1])
+                        break;
+                    lane[tail_idx] = new Car(*car);
                     tail_idx = proper_idx(lane, tail_idx - 1);
                     space--;
                 }
 
                 for (int t = 1; t <= space; t++) {
-                    entries[lane[idx]->get_starting_from()][proper_idx(entries[lane[idx]->get_starting_from()], -t)] = new Car(*lane[idx]);
+                    tail_idx = proper_idx(entries[car->get_starting_from()], -t);
+                    entries[car->get_starting_from()][tail_idx] = new Car(*car);
                 }
             }
         }
@@ -155,12 +159,13 @@ int Roundabout::calculate_another_lane_idx(int car_idx, int current_lane, int de
     return proper_idx(lanes[destination_lane], new_idx);
 }
 
-int Roundabout::change_lane_decision(int car_idx, int current_lane, int v) {
+int Roundabout::change_lane_decision(int car_idx, int current_lane, int v, Car *car) {
     int no_lanes = (int)lanes.size();
     int outer_lane_idx = no_lanes - 1;
 
     int outer_pos = calculate_another_lane_idx(car_idx, current_lane, outer_lane_idx);
-    double l = proper_idx(lanes[outer_lane_idx], lanes[current_lane][car_idx]->get_destination() - outer_pos);
+    int destination = car ? car->get_destination() : lanes[current_lane][car_idx]->get_destination();
+    double l = proper_idx(lanes[outer_lane_idx], destination - outer_pos);
 
     int decision = (int)floor((l / (double)lanes[outer_lane_idx].size()) * (double)no_lanes);
     decision = outer_lane_idx - decision;
@@ -188,12 +193,12 @@ void Roundabout::change_lanes() {
                     prev = lanes[decision][proper_idx(lanes[decision], new_idx - d_to_prev - 1)];
                     // check if previous car wouldn't crash into me
                     if (is_head(prev) &&
-                        prev->get_v() - prev->get_v_used() > d_to_prev - (car->get_space() - 1)) {
+                        prev->get_v_available() > d_to_prev - (car->get_space() - 1)) {
                         goto jmp;
                     }
                     if (!lanes[decision][new_idx] && d_to_prev >= car->get_space() - 1) {
                         lanes[decision][new_idx] = car;
-                        car->set_v_used(1);
+                        car->set_v_used(car->get_v_used() + 1);
                         lanes[lane][idx] = nullptr;
                     }
 
@@ -246,50 +251,58 @@ void Roundabout::brake() {
 }
 
 void Roundabout::enter() {
-    int to_end, distance_to_prev, idx_prev, velocity_left, distance_to_next, new_idx;
+    int to_end, distance_to_prev, idx_prev, new_idx, decision, rbt_idx, v_needed;
+    int outer_lane_idx = lanes.size() - 1;
+    bool stop;
+    Car *car;
 
     for (auto &pair : entries) {
         std::vector<Car *> &lane = pair.second;
+        stop = false;
         for (int idx = lane.size() - 1; idx >= 0; idx--) {
-            if (is_head(lane[idx])) {
+            car = lane[idx];
+            if (is_head(car) && idx != (int)lane.size() - 1) {
                 to_end = lane.size() - 1 - idx;
-                // if its velocity is lesser than length of entry line
-                if (lane[idx]->get_v() <= to_end) break;
-                std::vector<Car *> &rbt_lane = lanes[lanes.size() - 1];
-                // if some car is blocking entry then brake
-                if (rbt_lane[pair.first]) {
-                    lane[idx]->set_v(to_end);
+                if (car->get_v() > to_end) car->set_v(to_end);
+                break;
+            }
+            if (is_head(car)) {
+                if (car->get_v() > TURN_VELOCITY) car->set_v(TURN_VELOCITY);
+                // car can speed up to TURN_VELOCITY in 1s
+                decision = change_lane_decision(pair.first, outer_lane_idx, TURN_VELOCITY - 1, car);
+
+                // check if way to desired spot is free
+                for (int current_lane = outer_lane_idx; current_lane >= decision; current_lane--) {
+                    rbt_idx = calculate_another_lane_idx(pair.first, outer_lane_idx, current_lane, false);
+                    // if way isn't blocked
+                    if (lanes[current_lane][rbt_idx]) {
+                        stop = true;
+                        break;
+                    }
+                    // if car wouldn't hit me in the process
+                    distance_to_prev = find_prev(lanes[current_lane], rbt_idx);
+                    idx_prev = proper_idx(lanes[current_lane], rbt_idx - distance_to_prev - 1);
+                    if (distance_to_prev != (int)lanes[current_lane].size() - 1 &&
+                        lanes[current_lane][idx_prev]->get_v_available() >= distance_to_prev + 1) {
+                        stop = true;
+                        break;
+                    }
+                }
+                if (stop) {
+                    moved.insert(car);
                     break;
                 }
-                // get distance to prev car on rbt and its velocity
-                distance_to_prev = find_prev(rbt_lane, proper_idx(rbt_lane, pair.first + 1));
-                idx_prev = proper_idx(rbt_lane, pair.first - distance_to_prev);
-                if (distance_to_prev != ((int)rbt_lane.size() - 1) && rbt_lane[idx_prev]->get_v() >= distance_to_prev) {
-                    lane[idx]->set_v(to_end);
-                    break;
-                }
 
-                velocity_left = lane[idx]->get_v() - to_end;
-                // adjust velocity to turn manuver
-                if (velocity_left > TURN_VELOCITY) velocity_left = TURN_VELOCITY;
-                if (lane[idx]->get_v() > TURN_VELOCITY) lane[idx]->set_v(TURN_VELOCITY);
-
-                // adjust velocity to next car
-                distance_to_next = find_next(rbt_lane, pair.first - 1);
-                if (distance_to_next < velocity_left) {
-                    lane[idx]->set_v(distance_to_next + to_end);
-                    velocity_left = distance_to_next;
-                }
-
-                new_idx = lane[idx]->get_starting_from() + velocity_left - 1;
-                new_idx = proper_idx(rbt_lane, new_idx);
-                rbt_lane[new_idx] = lane[idx];
+                new_idx = calculate_another_lane_idx(pair.first, outer_lane_idx, decision, false);
+                v_needed = outer_lane_idx - decision + 1;
+                if (car->get_v() < v_needed) car->set_v(v_needed);  // accelerate to appropriate speed to enter
+                car->set_v_used(v_needed);                          // entering uses one speed (action point)
+                lanes[decision][new_idx] = car;
                 lane[idx] = nullptr;
-                moved.insert(rbt_lane[new_idx]);
+
                 // do tails correction
                 delete_tails();
                 fix_tails();
-
                 break;
             }
         }
@@ -378,7 +391,7 @@ void Roundabout::move() {
         for (size_t idx = 0; idx < lane.size(); idx++) {
             // check if car was moved before
             if (is_head(lane[idx]) && moved.find(lane[idx]) == moved.end()) {
-                next_idx = idx + lane[idx]->get_v() - lane[idx]->get_v_used();
+                next_idx = idx + lane[idx]->get_v_available();
                 next_idx = proper_idx(lane, next_idx);
 
                 temp = lane[idx];
@@ -447,15 +460,9 @@ Roundabout::Roundabout(
 }
 
 Roundabout::~Roundabout() {
-    for (auto &lane : lanes) {
-        delete_cars(lane);
-    }
-    for (auto &lane : entries) {
-        delete_cars(lane.second);
-    }
-    for (auto &lane : exits) {
-        delete_cars(lane.second);
-    }
+    for (auto &lane : lanes) delete_cars(lane);
+    for (auto &lane : entries) delete_cars(lane.second);
+    for (auto &lane : exits) delete_cars(lane.second);
 }
 
 void Roundabout::add_car_rbt(int lane, int idx, int space) {
@@ -510,6 +517,7 @@ void Roundabout::simulate() {
 
     generate_cars();
     accelerate();
+    // for (auto lane : lanes)
     change_lanes();
     brake();
     exit();

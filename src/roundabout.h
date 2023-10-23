@@ -48,7 +48,7 @@ class Roundabout {
     void accelerate_ee(std::map<int, std::vector<Car *>> &e);
     void accelerate();
     int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
-    int change_lane_decision(int car_idx, int lane_number, int v);
+    int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr);
     void change_lanes();
     void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();

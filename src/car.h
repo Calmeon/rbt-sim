@@ -18,6 +18,7 @@ class Car {
     void set_v(int v);
     int get_v_used();
     void set_v_used(int v);
+    int get_v_available();
     int get_space();
     bool get_is_tail();
     int get_starting_from();

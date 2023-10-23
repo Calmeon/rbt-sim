@@ -22,6 +22,7 @@ int Car::get_v() { return v; }
 void Car::set_v(int v) { this->v = v; }
 int Car::get_v_used() { return v_used; }
 void Car::set_v_used(int v) { this->v_used = v_used; }
+int Car::get_v_available() { return v - v_used; }
 int Car::get_space() { return space; }
 bool Car::get_is_tail() { return is_tail; }
 int Car::get_starting_from() { return starting_from; }

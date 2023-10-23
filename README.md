@@ -33,3 +33,4 @@ src -> Directory containing full source of an apllication
     - Calculating indexes on diffrent lanes
     - Choosing lane algorithm
     - Change lane function
+    - Enter on different lanes
