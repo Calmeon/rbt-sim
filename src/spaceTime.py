@@ -117,6 +117,7 @@ def plot(folder_path, rbt_dict, lane_lengths):
         plt.xlim(0, len(lane[0]))
         plt.ylim(-0.5, seconds - 0.5)
         plt.title(key)
+        plt.tight_layout()
 
         plt.savefig(f"{folder_path}/{key}.png")
         plt.clf()
