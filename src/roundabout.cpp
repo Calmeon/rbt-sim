@@ -131,15 +131,17 @@ void Roundabout::fix_tails() {
 // transition functions
 
 void Roundabout::generate_cars() {
-    int v, space, destination;
-    for (auto &entry : entries) {
-        if ((float)rand() / (float)RAND_MAX < entries_chances[entry.first] && !entry.second[0]) {
-            v = rand() % (max_velocity + 1);
-            space = weighted_random_choice(cars_sizes);
-            destination = weighted_random_choice(exits_chances);
-            add_car(entry.first, v, space, destination);
-        }
+    int entry, v, space, destination;
+    // for (auto e : entries) {
+    entry = weighted_random_choice(entries_chances);
+    if (!entries[entry][0]) {
+        v = rand() % (max_velocity + 1);
+        space = weighted_random_choice(cars_sizes);
+        destination = weighted_random_choice(exits_chances);
+        add_car(entry, v, space, destination);
+        // break;
     }
+    // }
 }
 
 void Roundabout::accelerate_car(Car *car) {
@@ -330,49 +332,40 @@ void Roundabout::enter() {
 }
 
 void Roundabout::exit() {
-    // consider doing smth in enter to prevent from missing exit
-    /*
-     * v = 9 v_left = 9
-     * drive to entry v = 9 v_left = 9-to_entry ex. 5
-     * check if v is appropriate for turn(turnv = 3)
-     * v = 3 v_left = 3
-     * check if needs to brake to next (ex. d = 2)
-     * v = 2 v_left = 2
-     */
-    int velocity_left, d_to_next, to_entry;
+    int d_to_next, to_entry;
     Car *car;
 
     std::vector<Car *> &rbt_lane = lanes[lanes.size() - 1];
     for (int idx = 0; idx < (int)rbt_lane.size(); idx++) {
         car = rbt_lane[idx];
         if (is_head(car) &&
-            proper_idx(rbt_lane, car->get_destination() - idx) < car->get_v() &&
+            proper_idx(rbt_lane, car->get_destination() - idx) < car->get_v_available() &&
             moved.find(car) == moved.end()) {
             to_entry = proper_idx(rbt_lane, car->get_destination() - idx);
-            velocity_left = car->get_v() - to_entry;
-
-            // brake to match turn velocity
-            if (velocity_left > TURN_VELOCITY) velocity_left = TURN_VELOCITY;
-            if (car->get_v() > TURN_VELOCITY) car->set_v(TURN_VELOCITY);
+            car->set_v_used(car->get_v_used() + to_entry);
 
             // brake for next car on exit
             d_to_next = find_next(exits[car->get_destination()], -1);
-            if (d_to_next < velocity_left) {
-                car->set_v(d_to_next + to_entry);
-                velocity_left = d_to_next;
+            if (d_to_next < car->get_v_available()) {
+                car->set_v(car->get_v_used() + d_to_next);
+            }
+            // brake to TURN_VELOCITY
+            if (car->get_v_available() > TURN_VELOCITY) {
+                car->set_v(car->get_v_used() + TURN_VELOCITY);
             }
             // exit is occupied
-            if (velocity_left == 0) {
+            if (d_to_next == 0) {
                 rbt_lane[car->get_destination()] = car;
             } else {
-                exits[car->get_destination()][velocity_left - 1] = car;
+                exits[car->get_destination()][car->get_v_available() - 1] = car;
             }
-            rbt_lane[idx] = nullptr;
+            // brake to TURN_VELOCITY
+            if (car->get_v() > TURN_VELOCITY) car->set_v(TURN_VELOCITY);
 
+            rbt_lane[idx] = nullptr;
             moved.insert(car);
         }
     }
-
     delete_tails();
     fix_tails();
 }
@@ -437,8 +430,8 @@ void Roundabout::delete_cars(std::vector<Car *> &lane) {
 
 Roundabout::Roundabout(
     float island_radius,
-    std::map<int, float> &entries,
-    std::map<int, float> &exits,
+    std::map<int, int> &entries,
+    std::map<int, int> &exits,
     int number_of_lanes,
     int max_velocity,
     int density,
@@ -453,7 +446,8 @@ Roundabout::Roundabout(
     this->second = 0;
 
     // setup history string
-    this->history += "No.lanes,No.entries,No.exits,Lanes lengths\n" +
+    this->history += "Seed: " + std::to_string(seed) +
+                     "\nNo.lanes,No.entries,No.exits,Lanes lengths\n" +
                      std::to_string(number_of_lanes) + "," +
                      std::to_string(entries.size()) + "," +
                      std::to_string(exits.size());
@@ -465,17 +459,23 @@ Roundabout::Roundabout(
         this->lanes.push_back(std::vector<Car *>(length, nullptr));
         this->history += "," + std::to_string(length);
     }
-    this->history += "\n";
+
+    this->history += "\nEntries:\t";
     // initialize entries
     for (auto &entry : entries) {
         this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
         this->entries_chances[entry.first] = entry.second;
+        this->history += std::to_string(entry.first) + "(e):" + std::to_string(entry.second) + "(w)\t";
     }
+    this->history += "\nExits:\t\t";
     // initialize exits
     for (auto &exit : exits) {
         this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
         this->exits_chances[exit.first] = exit.second;
+        this->history += std::to_string(exit.first) + "(e):" + std::to_string(exit.second) + "(w)\t";
     }
+    this->history += "\n";
+
     this->saving = false;
 }
 

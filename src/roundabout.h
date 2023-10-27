@@ -61,8 +61,8 @@ class Roundabout {
    public:
     Roundabout(
         float island_radius,
-        std::map<int, float> &entries,
-        std::map<int, float> &exits,
+        std::map<int, int> &entries,
+        std::map<int, int> &exits,
         int number_of_lanes = 1,
         int max_velocity = 9,
         int density = 100,

@@ -11,7 +11,7 @@ def read_file(filename):
     lines = file.readlines()
     file.close()
     # info
-    values = lines[1].strip().split(",")
+    values = lines[2].strip().split(",")
 
     no_lanes = int(values[0])
     no_entries = int(values[1])
@@ -22,7 +22,7 @@ def read_file(filename):
         lanes_lengths.append(int(values[3 + l]))
 
     # lanes
-    l = 3  # first 3 lines in txt are part of header
+    l = 6  # first 3 lines in txt are part of header
     while l < len(lines):
         for lane in range(no_lanes):
             line = lines[l].strip().split()[1]
