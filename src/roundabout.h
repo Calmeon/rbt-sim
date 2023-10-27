@@ -10,7 +10,7 @@
 class Roundabout {
     float island_radius;  // roundabout island radius in m
     int max_velocity;     // max velocity in m/s
-    float density;        // car denisty on the road <0,1>
+    int density;          // car denisty on the road <0,100>
     int second;           // second of simulation (no. steps)
     /*
      * 2D vector with rbt lanes
@@ -25,9 +25,9 @@ class Roundabout {
     std::map<int, std::vector<Car *>> entries;
     std::map<int, std::vector<Car *>> exits;
 
-    // key - where, value - chance(0-1)
-    std::map<int, float> entries_chances;
-    std::map<int, float> exits_chances;
+    // key - where, value - chance(0-100)
+    std::map<int, int> entries_chances;
+    std::map<int, int> exits_chances;
 
     std::set<Car *> moved;  // helper set
 
@@ -44,23 +44,28 @@ class Roundabout {
     void fix_tails();
     // transition functions
     void generate_cars();
+    void accelerate_car(Car *car);
     void accelerate_ee(std::map<int, std::vector<Car *>> &e);
     void accelerate();
+    int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
+    int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr);
+    void change_lanes();
     void brake_ee(std::map<int, std::vector<Car *>> &e);
     void brake();
     void enter();
     void exit();
     void move_ee(std::map<int, std::vector<Car *>> &e);
     void move();
+    void delete_cars(std::vector<Car *> &lane);
 
    public:
     Roundabout(
         float island_radius,
-        std::map<int, float> &entries,
-        std::map<int, float> &exits,
+        std::map<int, int> &entries,
+        std::map<int, int> &exits,
         int number_of_lanes = 1,
         int max_velocity = 9,
-        float density = 1,
+        int density = 100,
         int exits_entries_len = 50);
     ~Roundabout();
 
