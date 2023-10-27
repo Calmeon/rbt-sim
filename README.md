@@ -29,8 +29,8 @@ src -> Directory containing full source of an apllication
     - Folder structure
     - Running python script for plots from main program
     - Reading output.txt in python script
-- Multilane
-    - Calculating indexes on diffrent lanes
+- Multi lanes
+    - Calculating indexes on different lanes
     - Choosing lane algorithm
     - Change lane function
     - Enter on different lanes
