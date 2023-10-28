@@ -22,7 +22,7 @@ def read_file(filename):
         lanes_lengths.append(int(values[3 + l]))
 
     # lanes
-    l = 6  # first 3 lines in txt are part of header
+    l = 13  # first lines in txt are part of header
     while l < len(lines):
         for lane in range(no_lanes):
             line = lines[l].strip().split()[1]
@@ -79,7 +79,7 @@ def plot_ee(e, key, lane_lengths, color, y):
 
 
 def plot(folder_path, rbt_dict, lane_lengths):
-    folder_path += "/plots"
+    folder_path += "/space_time_diagrams"
     if not Path(f"{folder_path}/").exists():
         Path(f"{folder_path}").mkdir()
 

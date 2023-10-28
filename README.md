@@ -34,3 +34,5 @@ src -> Directory containing full source of an apllication
     - Choosing lane algorithm
     - Change lane function
     - Enter on different lanes
+- Fundamental diagram
+    - Cars generation based on density

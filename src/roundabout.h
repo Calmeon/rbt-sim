@@ -8,16 +8,20 @@
 #include "car.h"
 
 class Roundabout {
-    float island_radius;  // roundabout island radius in m
-    int max_velocity;     // max velocity in m/s
-    int density;          // car denisty on the road <0,100>
-    int second;           // second of simulation (no. steps)
+    double island_radius;         // roundabout island radius in m
+    int max_velocity;             // max velocity in m/s
+    double max_density;           // max car denisty on the road <0,100>
+    int capacity;                 // current capacity of roundabout
+    int max_capacity;             // max capacity of roundabout(with exits/entries)
+    int second;                   // second of simulation (no. steps)
+    double cumulative_densities;  // store densities for avg. calculation
     /*
      * 2D vector with rbt lanes
      * smaller idx = lane closer to the island
-     * ex. 0 - inside lane
-     *     1 - middle lane
-     *     2 - outer lane
+     * ex.
+     * 0 - inside lane
+     * 1 - middle lane
+     * 2 - outer lane
      */
     std::vector<std::vector<Car *>> lanes;
 
@@ -32,6 +36,7 @@ class Roundabout {
     std::set<Car *> moved;  // helper set
 
     bool saving;          // turns saving steps
+    std::string info;     // string containing simulation info
     std::string history;  // big string containing simulation history
 
     // utility functions
@@ -60,15 +65,16 @@ class Roundabout {
 
    public:
     Roundabout(
-        float island_radius,
+        double island_radius,
         std::map<int, int> &entries,
         std::map<int, int> &exits,
         int number_of_lanes = 1,
         int max_velocity = 9,
-        int density = 100,
+        double max_density = 100.0,
         int exits_entries_len = 50);
     ~Roundabout();
 
+    double get_density();
     void add_car_rbt(int lane, int idx, int space = 3);
     void add_car(int entry, int v, int space, int destination);
     void set_saving(bool save);
