@@ -74,7 +74,7 @@ class Roundabout {
     void set_saving(bool save);
     void print();
     void save_history();
-    void plot();
+    void space_time_diagram(int start, int no_steps);
     // one step of simulation
     void simulate();
     // multiple steps of simulation

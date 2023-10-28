@@ -524,8 +524,11 @@ void Roundabout::save_history() {
     history_file.close();
 }
 
-void Roundabout::plot() {
-    if (!saving) return;
+void Roundabout::space_time_diagram(int start, int no_steps) {
+    simulate(start);
+    set_saving(true);
+    simulate(no_steps);
+
     std::cout << "Creating plots..." << std::endl;
     save_history();
     std::string python_script = "python3 spaceTime.py " + std::to_string(seed);
