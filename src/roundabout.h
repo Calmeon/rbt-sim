@@ -15,6 +15,7 @@ class Roundabout {
     int max_capacity;             // max capacity of roundabout(with exits/entries)
     int second;                   // second of simulation (no. steps)
     double cumulative_densities;  // store densities for avg. calculation
+    int cars_left;                // how much cars exited roundabout
     /*
      * 2D vector with rbt lanes
      * smaller idx = lane closer to the island
@@ -74,7 +75,10 @@ class Roundabout {
         int exits_entries_len = 50);
     ~Roundabout();
 
+    std::string get_info();
     double get_density();
+    double get_flow();
+    double get_avg_density();
     void add_car_rbt(int lane, int idx, int space = 3);
     void add_car(int entry, int v, int space, int destination);
     void set_saving(bool save);

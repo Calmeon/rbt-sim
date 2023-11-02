@@ -1,7 +1,11 @@
 #include "helpers.h"
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <random>
 
+#include "roundabout.h"
 #include "settings.h"
 
 bool is_head(Car *car) { return (car && !car->get_is_tail()); }
@@ -89,4 +93,48 @@ std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int int
     result += "\n";
 
     return result;
+}
+
+std::string get_output_file_path() {
+    // create history folder
+    std::string historyPath = "../history";
+    if (!std::filesystem::exists(historyPath)) std::filesystem::create_directory(historyPath);
+    // create seed folder
+    std::string directoryPath = "../history/" + std::to_string(seed);
+    if (!std::filesystem::exists(directoryPath)) std::filesystem::create_directory(directoryPath);
+
+    return directoryPath + "/output.txt";
+}
+
+void fundamental_diagram(double island_radius,
+                         std::map<int, int> &entries, std::map<int, int> &exits,
+                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples) {
+    double flow, avg_density;
+    std::ofstream history_file(get_output_file_path());
+
+    Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, 100.0, exits_entries_len);
+    std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n";
+
+    for (int density = 5; density <= 100; density += 5) {
+        flow = 0.0;
+        avg_density = 0.0;
+        for (int sample = 0; sample < samples; sample++) {
+            Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, density, exits_entries_len);
+            rbt.simulate(200);
+            rbt.set_saving(true);
+            rbt.simulate(1000);
+            flow += rbt.get_flow();
+            avg_density += rbt.get_avg_density();
+        }
+        flow /= samples;
+        avg_density /= samples;
+        history += std::to_string(density) + ":" + std::to_string(flow) + ":" + std::to_string(avg_density) + "\n";
+    }
+
+    history_file << history;
+    history_file.close();
+
+    std::string python_script = "python3 fundamental_diagram.py " + std::to_string(seed);
+    std::cout << "Creating diagram..." << std::endl;
+    system(python_script.c_str());
 }

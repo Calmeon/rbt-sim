@@ -22,7 +22,7 @@ def read_file(filename):
         lanes_lengths.append(int(values[3 + l]))
 
     # lanes
-    l = 13  # first lines in txt are part of header
+    l = 14  # first lines in txt are part of header
     while l < len(lines):
         for lane in range(no_lanes):
             line = lines[l].strip().split()[1]

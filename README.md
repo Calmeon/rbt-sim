@@ -36,3 +36,5 @@ src -> Directory containing full source of an apllication
     - Enter on different lanes
 - Fundamental diagram
     - Cars generation based on density
+    - Function to generate data
+    - Ploting data

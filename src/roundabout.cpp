@@ -10,6 +10,81 @@
 #include "helpers.h"
 #include "settings.h"
 
+Roundabout::Roundabout(
+    double island_radius,
+    std::map<int, int> &entries,
+    std::map<int, int> &exits,
+    int number_of_lanes,
+    int max_velocity,
+    double max_density,
+    int exits_entries_len) {
+    // add to island radius half of raod width
+    double radius = island_radius + ROAD_WIDTH / 2;
+    int length;
+
+    this->island_radius = island_radius;
+    this->max_velocity = max_velocity;
+    this->max_density = max_density;
+    this->second = 0;
+    this->capacity = 0;
+    this->max_capacity = 0;
+    this->cumulative_densities = 0.0;
+    this->cars_left = 0;
+    this->history = "";
+
+    // setup info string
+    this->info += "Seed: " + std::to_string(seed);
+    this->info += "\nNo.lanes,No.entries,No.exits,Lanes lengths\n" +
+                  std::to_string(number_of_lanes) + "," +
+                  std::to_string(entries.size()) + "," +
+                  std::to_string(exits.size());
+
+    // calculate and initialize lanes
+    // from circle circuit formula assign appropiate lengths
+    for (int lane = 0; lane < number_of_lanes; lane++) {
+        length = 2 * M_PI * (radius + ROAD_WIDTH * lane);
+        this->lanes.push_back(std::vector<Car *>(length, nullptr));
+        this->info += "," + std::to_string(length);
+        this->max_capacity += length;
+    }
+
+    this->info += "\nRbt radius: " + std::to_string(island_radius);
+    this->info += "\nMax velocity: " + std::to_string(max_velocity);
+    this->info += "\nTurn velocity: " + std::to_string(TURN_VELOCITY);
+
+    this->info += "\nCars sizes: ";
+    for (auto car : cars_sizes) {
+        this->info += std::to_string(car.first) + "(c):" + std::to_string(car.second) + "(w)\t";
+    }
+
+    this->info += "\nEntries:\t";
+    // initialize entries
+    for (auto &entry : entries) {
+        this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->entries_chances[entry.first] = entry.second;
+        this->info += std::to_string(entry.first) + "(e):" + std::to_string(entry.second) + "(w)\t";
+        this->max_capacity += exits_entries_len;
+    }
+    this->info += "\nExits:\t\t";
+    // initialize exits
+    for (auto &exit : exits) {
+        this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->exits_chances[exit.first] = exit.second;
+        this->info += std::to_string(exit.first) + "(e):" + std::to_string(exit.second) + "(w)\t";
+        this->max_capacity += exits_entries_len;
+    }
+
+    this->info += "\nMax capacity: " + std::to_string(max_capacity) + "\n";
+
+    this->saving = false;
+}
+
+Roundabout::~Roundabout() {
+    for (auto &lane : lanes) delete_cars(lane);
+    for (auto &lane : entries) delete_cars(lane.second);
+    for (auto &lane : exits) delete_cars(lane.second);
+}
+
 // private functions
 
 std::string Roundabout::prepare_string() {
@@ -389,6 +464,7 @@ void Roundabout::move_ee(std::map<int, std::vector<Car *>> &e) {
 
                 if (e == exits && next_idx >= (int)lane.size()) {
                     capacity -= lane[idx]->get_space();
+                    if (saving) cars_left++;
                     delete lane[idx];
                     lane[idx] = nullptr;
                 } else {
@@ -435,84 +511,18 @@ void Roundabout::delete_cars(std::vector<Car *> &lane) {
 
 // Public Functions
 
-Roundabout::Roundabout(
-    double island_radius,
-    std::map<int, int> &entries,
-    std::map<int, int> &exits,
-    int number_of_lanes,
-    int max_velocity,
-    double max_density,
-    int exits_entries_len) {
-    // add to island radius half of raod width
-    double radius = island_radius + ROAD_WIDTH / 2;
-    int length;
-
-    this->island_radius = island_radius;
-    this->max_velocity = max_velocity;
-    this->max_density = max_density;
-    this->second = 0;
-    this->capacity = 0;
-    this->max_capacity = 0;
-    this->cumulative_densities = 0.0;
-    this->history = "";
-
-    // setup info string
-    this->info += "Seed: " + std::to_string(seed);
-    this->info += "\nNo.lanes,No.entries,No.exits,Lanes lengths\n" +
-                  std::to_string(number_of_lanes) + "," +
-                  std::to_string(entries.size()) + "," +
-                  std::to_string(exits.size());
-
-    // calculate and initialize lanes
-    // from circle circuit formula assign appropiate lengths
-    for (int lane = 0; lane < number_of_lanes; lane++) {
-        length = 2 * M_PI * (radius + ROAD_WIDTH * lane);
-        this->lanes.push_back(std::vector<Car *>(length, nullptr));
-        this->info += "," + std::to_string(length);
-        this->max_capacity += length;
-    }
-
-    this->info += "\nRbt radius: " + std::to_string(island_radius);
-    this->info += "\nMax velocity: " + std::to_string(max_velocity);
-    this->info += "\nTurn velocity: " + std::to_string(TURN_VELOCITY);
-
-    this->info += "\nCars sizes: ";
-    for (auto car : cars_sizes) {
-        this->info += std::to_string(car.first) + "(c):" + std::to_string(car.second) + "(w)\t";
-    }
-
-    this->info += "\nEntries:\t";
-    // initialize entries
-    for (auto &entry : entries) {
-        this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->entries_chances[entry.first] = entry.second;
-        this->info += std::to_string(entry.first) + "(e):" + std::to_string(entry.second) + "(w)\t";
-        this->max_capacity += exits_entries_len;
-    }
-    this->info += "\nExits:\t\t";
-    // initialize exits
-    for (auto &exit : exits) {
-        this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->exits_chances[exit.first] = exit.second;
-        this->info += std::to_string(exit.first) + "(e):" + std::to_string(exit.second) + "(w)\t";
-        this->max_capacity += exits_entries_len;
-    }
-
-    this->info += "\nMax capacity: " + std::to_string(max_capacity);
-    this->info += "\nMax density: " + std::to_string(max_density) +
-                  "(" + std::to_string((int)(max_capacity * (max_density / 100))) + ")\n";
-
-    this->saving = false;
-}
-
-Roundabout::~Roundabout() {
-    for (auto &lane : lanes) delete_cars(lane);
-    for (auto &lane : entries) delete_cars(lane.second);
-    for (auto &lane : exits) delete_cars(lane.second);
-}
+std::string Roundabout::get_info() { return info; }
 
 double Roundabout::get_density() {
     return ((double)capacity / (double)max_capacity) * 100;
+}
+
+double Roundabout::get_flow() {
+    return ((double)cars_left / (double)second) * 3600.0;
+}
+
+double Roundabout::get_avg_density() {
+    return cumulative_densities / second;
 }
 
 void Roundabout::add_car_rbt(int lane, int idx, int space) {
@@ -540,19 +550,12 @@ void Roundabout::set_saving(bool save) { saving = save; }
 void Roundabout::print() { std::cout << prepare_string(); }
 
 void Roundabout::save_history() {
-    double avg_density = cumulative_densities / second;
-    info += "Average density: " + std::to_string(avg_density) + "\n";
+    info += "Max density: " + std::to_string(max_density) +
+            "(" + std::to_string((int)(max_capacity * (max_density / 100))) + ")\n";
+    info += "Average density: " + std::to_string(get_avg_density()) + "\n";
+    info += "Cars left: " + std::to_string(get_flow()) + "\n";
 
-    // create history folder
-    std::string historyPath = "../history";
-    if (!std::filesystem::exists(historyPath)) std::filesystem::create_directory(historyPath);
-
-    // create seed folder
-    std::string directoryPath = "../history/" + std::to_string(seed);
-    if (!std::filesystem::exists(directoryPath)) std::filesystem::create_directory(directoryPath);
-
-    std::string filePath = directoryPath + "/output.txt";
-    std::ofstream history_file(filePath);
+    std::ofstream history_file(get_output_file_path());
     history_file << info;
     history.pop_back();  // delete last \n
     history_file << history;
@@ -560,14 +563,13 @@ void Roundabout::save_history() {
 }
 
 void Roundabout::space_time_diagram(int start, int no_steps) {
-    std::cout << "Seed: " << seed << std::endl;
     simulate(start);
     set_saving(true);
     simulate(no_steps);
 
-    std::cout << "Creating plots..." << std::endl;
     save_history();
     std::string python_script = "python3 space_time_diagram.py " + std::to_string(seed);
+    std::cout << "Creating diagrams..." << std::endl;
     system(python_script.c_str());
 }
 
