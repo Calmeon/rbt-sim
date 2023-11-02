@@ -108,14 +108,15 @@ std::string get_output_file_path() {
 
 void fundamental_diagram(double island_radius,
                          std::map<int, int> &entries, std::map<int, int> &exits,
-                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples) {
+                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples,
+                         int step, int from, int to) {
     double flow, avg_density;
     std::ofstream history_file(get_output_file_path());
 
     Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, 100.0, exits_entries_len);
-    std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n";
+    std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n0:0.000000:0.000000\n";
 
-    for (int density = 5; density <= 100; density += 5) {
+    for (int density = from; density <= to; density += step) {
         flow = 0.0;
         avg_density = 0.0;
         for (int sample = 0; sample < samples; sample++) {

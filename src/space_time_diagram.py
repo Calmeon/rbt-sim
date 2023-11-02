@@ -112,8 +112,8 @@ def plot(folder_path, rbt_dict, lane_lengths):
             plot_ee(exits, key, lane_lengths, "red", 0)
             plot_ee(entries, key, lane_lengths, "green", 1)
 
-        plt.xlabel("Driving direction")
-        plt.ylabel("Time")
+        plt.xlabel("Driving direction (->)")
+        plt.ylabel("Time (s)")
         plt.xlim(0, len(lane[0]))
         plt.ylim(-0.5, seconds - 0.5)
         plt.title(key)

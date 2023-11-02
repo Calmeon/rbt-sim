@@ -14,7 +14,7 @@ int main() {
     Roundabout rbt(28, entries, exits, 3, 9, 100.0, 16);
 
     // rbt.space_time_diagram(200, 200);
-    fundamental_diagram(28, entries, exits, 3, 9, 50, 3);
+    fundamental_diagram(28, entries, exits, 3, 9, 50);
 
     return 0;
 }

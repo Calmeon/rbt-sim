@@ -25,4 +25,5 @@ std::string get_output_file_path();
 
 void fundamental_diagram(double island_radius,
                          std::map<int, int> &entries, std::map<int, int> &exits,
-                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples);
+                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples = 3,
+                         int step = 5, int from = 5, int to = 100);
