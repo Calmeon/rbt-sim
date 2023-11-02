@@ -38,3 +38,4 @@ src -> Directory containing full source of an apllication
     - Cars generation based on density
     - Function to generate data
     - Ploting data
+    - Data approximation
