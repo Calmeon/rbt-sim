@@ -34,6 +34,9 @@ class Roundabout {
     std::map<int, int> entries_chances;
     std::map<int, int> exits_chances;
 
+    // which lanes can be accesed from entry
+    std::map<int, std::vector<int>> entries_lanes;
+
     std::set<Car *> moved;  // helper set for moved cars
 
     bool saving;          // turns saving steps
@@ -58,7 +61,7 @@ class Roundabout {
     void adjust_velocities();
 
     int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
-    int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr);
+    int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr, int dest = -1);
     void change_lanes();
 
     void enter();
@@ -72,8 +75,8 @@ class Roundabout {
    public:
     Roundabout(
         double island_radius,
-        std::map<int, int> &entries,
-        std::map<int, int> &exits,
+        std::vector<std::vector<std::vector<int>>> &entries,
+        std::vector<std::vector<int>> &exits,
         int number_of_lanes = 1,
         int max_velocity = 9,
         double max_density = 100.0,

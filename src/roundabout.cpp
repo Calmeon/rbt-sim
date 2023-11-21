@@ -13,8 +13,8 @@
 
 Roundabout::Roundabout(
     double island_radius,
-    std::map<int, int> &entries,
-    std::map<int, int> &exits,
+    std::vector<std::vector<std::vector<int>>> &entries,
+    std::vector<std::vector<int>> &exits,
     int number_of_lanes,
     int max_velocity,
     double max_density,
@@ -34,8 +34,8 @@ Roundabout::Roundabout(
     this->history = "";
 
     // setup info string
-    this->info += "Seed: " + std::to_string(seed);
-    this->info += "\nNo.lanes,No.entries,No.exits,Lanes lengths\n" +
+    this->info += "Seed: " + std::to_string(seed) +
+                  "\nNo.lanes,No.entries,No.exits,Lanes lengths\n" +
                   std::to_string(number_of_lanes) + "," +
                   std::to_string(entries.size()) + "," +
                   std::to_string(exits.size());
@@ -49,11 +49,10 @@ Roundabout::Roundabout(
         this->max_capacity += length;
     }
 
-    this->info += "\nRbt radius: " + std::to_string(island_radius);
-    this->info += "\nMax velocity: " + std::to_string(max_velocity);
-    this->info += "\nTurn velocity: " + std::to_string(TURN_VELOCITY);
-
-    this->info += "\nCars sizes: ";
+    this->info += "\nRbt radius: " + std::to_string(island_radius) +
+                  "\nMax velocity: " + std::to_string(max_velocity) +
+                  "\nTurn velocity: " + std::to_string(TURN_VELOCITY) +
+                  "\nCars sizes: ";
     for (auto car : cars_sizes) {
         this->info += std::to_string(car.first) + "(c):" + std::to_string(car.second) + "(w)\t";
     }
@@ -61,22 +60,23 @@ Roundabout::Roundabout(
     this->info += "\nEntries:\t";
     // initialize entries
     for (auto &entry : entries) {
-        this->entries[entry.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->entries_chances[entry.first] = entry.second;
-        this->info += std::to_string(entry.first) + "(e):" + std::to_string(entry.second) + "(w)\t";
+        auto entry_params = entry[0];
+        this->entries_lanes[entry_params[0]] = entry[1];
+        this->entries[entry_params[0]] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->entries_chances[entry_params[0]] = entry_params[1];
+        this->info += std::to_string(entry_params[0]) + "(e):" + std::to_string(entry_params[1]) + "(w)\t";
         this->max_capacity += exits_entries_len;
     }
     this->info += "\nExits:\t\t";
     // initialize exits
     for (auto &exit : exits) {
-        this->exits[exit.first] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->exits_chances[exit.first] = exit.second;
-        this->info += std::to_string(exit.first) + "(e):" + std::to_string(exit.second) + "(w)\t";
+        this->exits[exit[0]] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->exits_chances[exit[0]] = exit[1];
+        this->info += std::to_string(exit[0]) + "(e):" + std::to_string(exit[1]) + "(w)\t";
         this->max_capacity += exits_entries_len;
     }
 
     this->info += "\nMax capacity: " + std::to_string(max_capacity) + "\n";
-
     this->saving = false;
 }
 
@@ -209,20 +209,29 @@ void Roundabout::fix_tails() {
 // transition functions
 
 void Roundabout::generate_cars() {
-    int entry, v, space, destination;
-
+    int entry, v, space, destination, lane_decision;
+    int no_lanes = lanes.size();
+    int outer_lane_idx = no_lanes - 1;
     if (get_density() >= max_density) return;
-    // commented loop is for trying until car is added
+    // loop is for trying until car is added
     std::map<int, int> entries_chances_copy(entries_chances);
+    std::vector<int> available_lanes;
+    std::vector<int>::const_iterator it;
 
     while (entries_chances_copy.size()) {
         entry = weighted_random_choice(entries_chances);
         if (!entries[entry][0]) {
-            v = rand() % (max_velocity + 1);
-            space = weighted_random_choice(cars_sizes);
             destination = weighted_random_choice(exits_chances);
-            add_car(entry, v, space, destination);
-            break;
+            lane_decision = change_lane_decision(entry, outer_lane_idx, no_lanes, nullptr, destination);
+
+            available_lanes = entries_lanes[entry];
+            it = std::find(available_lanes.begin(), available_lanes.end(), lane_decision);
+            if (it != available_lanes.end()) {
+                v = rand() % (max_velocity + 1);
+                space = weighted_random_choice(cars_sizes);
+                add_car(entry, v, space, destination);
+                break;
+            }
         }
         entries_chances_copy.erase(entry);
     }
@@ -236,12 +245,17 @@ int Roundabout::calculate_another_lane_idx(int car_idx, int current_lane, int de
     return proper_idx(lanes[destination_lane], new_idx);
 }
 
-int Roundabout::change_lane_decision(int car_idx, int current_lane, int v, Car *car) {
+int Roundabout::change_lane_decision(int car_idx, int current_lane, int v, Car *car, int dest) {
     int no_lanes = (int)lanes.size();
     int outer_lane_idx = no_lanes - 1;
 
     int outer_pos = calculate_another_lane_idx(car_idx, current_lane, outer_lane_idx);
-    int destination = car ? car->get_destination() : lanes[current_lane][car_idx]->get_destination();
+    int destination;
+    if (dest == -1)
+        destination = car ? car->get_destination() : lanes[current_lane][car_idx]->get_destination();
+    else
+        destination = dest;
+
     double l = proper_idx(lanes[outer_lane_idx], destination - outer_pos);
 
     int decision = (int)floor((l / (double)lanes[outer_lane_idx].size()) * (double)no_lanes);
@@ -254,7 +268,7 @@ int Roundabout::change_lane_decision(int car_idx, int current_lane, int v, Car *
 }
 
 void Roundabout::change_lanes() {
-    int decision, d_to_prev, new_idx, outer_lane_idx, outer_pos;
+    int decision, d_to_prev, new_idx, outer_lane_idx, outer_pos, car_d_dec;
     double l, wait_percent = 0.1;
     Car *car, *prev;
     std::set<Car *> changed;
@@ -271,12 +285,23 @@ void Roundabout::change_lanes() {
                     new_idx = calculate_another_lane_idx(idx, lane, decision);
                     change = false;
                     while (1) {
+                        // if field occupied
                         if (lanes[decision][new_idx]) break;
 
                         d_to_prev = find_prev(lanes[decision], new_idx);
-                        prev = lanes[decision][proper_idx(lanes[decision], new_idx - d_to_prev - 1)];
-                        if (is_head(prev) && prev->get_v() > d_to_prev - (car->get_space() - 1)) break;
+                        // not enough space
                         if (d_to_prev < car->get_space() - 1) break;
+
+                        prev = lanes[decision][proper_idx(lanes[decision], new_idx - d_to_prev - 1)];
+                        // prev is tail so car is free to go
+                        if (!is_head(prev)) {
+                            change = true;
+                            break;
+                        }
+                        // safety criterion
+                        car_d_dec = d_dec(prev->get_v(), car->get_v());
+                        if (d_to_prev < car_d_dec) break;
+
                         change = true;
                         break;
                     }

@@ -137,7 +137,8 @@ std::string get_output_file_path() {
 }
 
 void fundamental_diagram(double island_radius,
-                         std::map<int, int> &entries, std::map<int, int> &exits,
+                         std::vector<std::vector<std::vector<int>>> &entries,
+                         std::vector<std::vector<int>> &exits,
                          int number_of_lanes, int max_velocity, int exits_entries_len, int samples,
                          int step, int from, int to) {
     double flow, avg_density;
