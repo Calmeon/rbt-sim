@@ -119,6 +119,7 @@ void fundamental_diagram(double island_radius,
     for (int density = from; density <= to; density += step) {
         flow = 0.0;
         avg_density = 0.0;
+
         for (int sample = 0; sample < samples; sample++) {
             Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, density, exits_entries_len);
             rbt.simulate(200);

@@ -34,7 +34,7 @@ class Roundabout {
     std::map<int, int> entries_chances;
     std::map<int, int> exits_chances;
 
-    std::set<Car *> moved;  // helper set
+    std::set<Car *> moved;  // helper set for moved cars
 
     bool saving;          // turns saving steps
     std::string info;     // string containing simulation info
@@ -43,6 +43,7 @@ class Roundabout {
     // utility functions
     std::string prepare_string();
     void save();
+    bool is_moved(Car *car);
     // functions with ee sufix are for exits/entries
     void delete_tails_ee(std::map<int, std::vector<Car *>> &e);
     void delete_tails();
@@ -50,18 +51,22 @@ class Roundabout {
     void fix_tails();
     // transition functions
     void generate_cars();
-    void accelerate_car(Car *car);
-    void accelerate_ee(std::map<int, std::vector<Car *>> &e);
-    void accelerate();
+
+    void save_velocities();
+    void adjust_velocity(std::vector<Car *> &lane, bool ee, bool entry, bool outer_lane = -1);
+    void adjust_velocities_ee(std::map<int, std::vector<Car *>> &e);
+    void adjust_velocities();
+
     int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
     int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr);
     void change_lanes();
-    void brake_ee(std::map<int, std::vector<Car *>> &e);
-    void brake();
+
     void enter();
     void exit();
+
     void move_ee(std::map<int, std::vector<Car *>> &e);
     void move();
+
     void delete_cars(std::vector<Car *> &lane);
 
    public:

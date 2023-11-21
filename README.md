@@ -39,3 +39,4 @@ src -> Directory containing full source of an apllication
     - Function to generate data
     - Ploting data
     - Data approximation
+- Dynamic velocities based on math model
