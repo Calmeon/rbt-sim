@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <sstream>
 
 #include "roundabout.h"
 #include "settings.h"
@@ -43,6 +44,33 @@ int find_prev(std::vector<Car *> &lane, int idx) {
         if (lane[p_idx]) return i - 1;
     }
     return lane.size() - 1;
+}
+
+int d_brake(int v) {
+    int result = 0;
+    int no_steps = v / V_M;
+    for (int i = 1; i <= no_steps; i++)
+        result += (v - i * V_M);
+    return result;
+}
+
+int d_f(int v) {
+    return v + d_brake(v);
+}
+
+int d_acc(int v, int v_next) {
+    int d_acc = (d_f(v + A_PLUS) + D_R) - d_brake(v_next);
+    return std::max(0, d_acc);
+}
+
+int d_keep(int v, int v_next) {
+    int d_keep = (d_f(v) + D_R) - d_brake(v_next);
+    return std::max(0, d_keep);
+}
+
+int d_dec(int v, int v_next) {
+    int d_dec = (d_f(v + A_MINUS) + D_R) - d_brake(v_next);
+    return std::max(0, d_dec);
 }
 
 /*
@@ -87,7 +115,9 @@ std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int int
         } else if (car->get_is_tail()) {
             result += ">";
         } else {
-            result += std::to_string(car->get_v());
+            std::ostringstream ss;
+            ss << std::hex << car->get_v();
+            result += ss.str();
         }
     }
     result += "\n";

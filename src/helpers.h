@@ -17,6 +17,13 @@ int find_next(std::vector<Car *> &lane, int idx);
 // return distance to previous car
 int find_prev(std::vector<Car *> &lane, int idx);
 
+// distance formulas
+int d_brake(int v);
+int d_f(int v);
+int d_acc(int v, int v_next);
+int d_keep(int v, int v_next);
+int d_dec(int v, int v_next);
+
 int weighted_random_choice(std::map<int, int> &dict);
 
 std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int intend = 10);
