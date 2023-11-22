@@ -349,6 +349,7 @@ void Roundabout::change_lanes() {
 
 void Roundabout::enter() {
     int to_end, distance_to_prev, idx_prev, new_idx, decision, rbt_idx;
+    int d_to_prev_from_entry, d_to_prev_from_his_exit;
     int no_lanes = (int)lanes.size();
     int outer_lane_idx = no_lanes - 1;
     bool stop;
@@ -397,8 +398,13 @@ void Roundabout::enter() {
                     car_prev = lanes[current_lane][idx_prev];
                     if (distance_to_prev != (int)lanes[current_lane].size() - 1 && is_head(car_prev) &&
                         car_prev->get_v() >= distance_to_prev + 1) {
-                        stop = true;
-                        break;
+                        // blinker
+                        d_to_prev_from_entry = proper_idx(lanes[current_lane], pair.first - idx_prev);
+                        d_to_prev_from_his_exit = proper_idx(lanes[current_lane], car_prev->get_destination() - idx_prev);
+                        if (!(current_lane == outer_lane_idx && d_to_prev_from_entry > d_to_prev_from_his_exit)) {
+                            stop = true;
+                            break;
+                        }
                     }
                 }
                 if (stop) {
