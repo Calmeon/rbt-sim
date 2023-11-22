@@ -40,3 +40,4 @@ src -> Directory containing full source of an apllication
     - Ploting data
     - Data approximation
 - Dynamic velocities based on math model
+- Giving way to cars changing lanes

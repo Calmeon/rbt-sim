@@ -7,6 +7,7 @@ class Car {
     int destination;    // which exit will car use
     int starting_from;  // at which entry car appeared
     Car *head;          // tails have head pointer
+    int waiting;        // how many steps is car waiting for lane change
 
    public:
     // head constructor
@@ -23,4 +24,6 @@ class Car {
     bool get_is_tail();
     int get_starting_from();
     int get_destination();
+    void set_waiting(int waiting);
+    int get_waiting();
 };

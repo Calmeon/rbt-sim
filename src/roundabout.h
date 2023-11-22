@@ -37,7 +37,8 @@ class Roundabout {
     // which lanes can be accesed from entry
     std::map<int, std::vector<int>> entries_lanes;
 
-    std::set<Car *> moved;  // helper set for moved cars
+    std::set<Car *> moved;     // helper set for moved cars
+    std::set<Car *> adjusted;  // helper set for cars with adjusted v
 
     bool saving;          // turns saving steps
     std::string info;     // string containing simulation info

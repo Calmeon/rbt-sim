@@ -7,6 +7,7 @@ Car::Car(int v, int space, int destination, int starting_from) {
     this->destination = destination;
     this->starting_from = starting_from;
     this->head = nullptr;
+    this->waiting = 0;
 }
 Car::Car(Car *head) { this->head = head; }
 Car::~Car() {}
@@ -22,3 +23,5 @@ int Car::get_space() { return space; }
 bool Car::get_is_tail() { return head; }
 int Car::get_starting_from() { return starting_from; }
 int Car::get_destination() { return destination; }
+void Car::set_waiting(int waiting) { this->waiting = waiting; }
+int Car::get_waiting() { return waiting; }
