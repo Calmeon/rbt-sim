@@ -28,8 +28,11 @@ Roundabout::Roundabout(
     this->max_density = max_density;
     this->second = 0;
     this->capacity = 0;
+    this->capacity_rbt = 0;
     this->max_capacity = 0;
+    this->max_capacity_rbt = 0;
     this->cumulative_densities = 0.0;
+    this->cumulative_densities_rbt = 0.0;
     this->cars_left = 0;
     this->history = "";
 
@@ -47,6 +50,7 @@ Roundabout::Roundabout(
         this->lanes.push_back(std::vector<Car *>(length, nullptr));
         this->info += "," + std::to_string(length);
         this->max_capacity += length;
+        this->max_capacity_rbt += length;
     }
 
     this->info += "\nRbt radius: " + std::to_string(island_radius) +
@@ -413,6 +417,7 @@ void Roundabout::enter() {
                     break;
                 }
 
+                capacity_rbt += car->get_space();
                 // move car onto roundabout
                 new_idx = calculate_another_lane_idx(pair.first, outer_lane_idx, decision, false);
                 lanes[decision][new_idx] = car;
@@ -437,6 +442,7 @@ void Roundabout::exit() {
 
         // car is in front of exit
         if (is_head(car) && idx == car->get_destination() && car->get_v() > 0) {
+            capacity_rbt -= car->get_space();
             exits[car->get_destination()][car->get_v() - 1] = car;
             rbt_lane[idx] = nullptr;
             moved.insert(car);
@@ -525,6 +531,10 @@ double Roundabout::get_density() {
     return ((double)capacity / (double)max_capacity) * 100;
 }
 
+double Roundabout::get_density_rbt() {
+    return ((double)capacity_rbt / (double)max_capacity_rbt) * 100;
+}
+
 double Roundabout::get_flow() {
     return ((double)cars_left / (double)second) * 3600.0;
 }
@@ -533,19 +543,8 @@ double Roundabout::get_avg_density() {
     return cumulative_densities / second;
 }
 
-void Roundabout::add_car_rbt(int lane, int idx, int space) {
-    Car *head = new Car(0, space, -1, -1);
-    Car *tail;
-    int tail_idx;
-
-    idx = proper_idx(lanes[lane], idx);
-    lanes[lane][idx] = head;
-
-    for (int i = 1; i < space; i++) {
-        tail = new Car(head);
-        tail_idx = proper_idx(lanes[lane], idx - i);
-        lanes[lane][tail_idx] = tail;
-    }
+double Roundabout::get_avg_density_rbt() {
+    return cumulative_densities_rbt / second;
 }
 
 void Roundabout::add_car(int entry, int v, int space, int destination) {
@@ -560,7 +559,8 @@ void Roundabout::print() { std::cout << prepare_string(); }
 void Roundabout::save_history() {
     info += "Max density: " + std::to_string(max_density) +
             "(" + std::to_string((int)(max_capacity * (max_density / 100))) + ")\n";
-    info += "Average density: " + std::to_string(get_avg_density()) + "\n";
+    info += "Average density: " + std::to_string(get_avg_density()) + " | " +
+            std::to_string(get_avg_density_rbt()) + "\n";
     info += "Cars left: " + std::to_string(get_flow()) + "\n";
 
     std::ofstream history_file(get_output_file_path());
@@ -687,6 +687,7 @@ void Roundabout::simulate() {
     adjusted.clear();
     if (saving) {
         cumulative_densities += get_density();
+        cumulative_densities_rbt += get_density_rbt();
         second++;
         save();
     }
