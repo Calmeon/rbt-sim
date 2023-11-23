@@ -167,7 +167,7 @@ void fundamental_diagram(double island_radius,
     history_file << history;
     history_file.close();
 
-    std::string python_script = "python3 fundamental_diagram.py " + std::to_string(seed);
+    std::string python_script = "python3 diagrams/fundamental_diagram.py " + std::to_string(seed);
     std::cout << "Creating diagram..." << std::endl;
     system(python_script.c_str());
 }

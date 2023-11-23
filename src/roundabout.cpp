@@ -576,7 +576,7 @@ void Roundabout::space_time_diagram(int start, int no_steps) {
     simulate(no_steps);
 
     save_history();
-    std::string python_script = "python3 space_time_diagram.py " + std::to_string(seed);
+    std::string python_script = "python3 diagrams/space_time_diagram.py " + std::to_string(seed);
     std::cout << "Creating diagrams..." << std::endl;
     system(python_script.c_str());
 }
