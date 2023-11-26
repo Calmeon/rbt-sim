@@ -42,3 +42,5 @@ src -> Directory containing full source of an apllication
 - Dynamic velocities based on math model
 - Giving way to cars changing lanes
 - Blinkers
+- Add agents
+- Add variables to lane change decision for agents

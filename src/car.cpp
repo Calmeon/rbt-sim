@@ -1,6 +1,6 @@
 #include "car.h"
 
-Car::Car(int v, int space, int destination, int starting_from) {
+Car::Car(int v, int space, int destination, int starting_from, Agent *agent) {
     this->v = v;
     this->v_old = v;
     this->space = space;
@@ -8,6 +8,7 @@ Car::Car(int v, int space, int destination, int starting_from) {
     this->starting_from = starting_from;
     this->head = nullptr;
     this->waiting = 0;
+    this->agent = agent;
 }
 Car::Car(Car *head) { this->head = head; }
 Car::~Car() {}
@@ -25,3 +26,11 @@ int Car::get_starting_from() { return starting_from; }
 int Car::get_destination() { return destination; }
 void Car::set_waiting(int waiting) { this->waiting = waiting; }
 int Car::get_waiting() { return waiting; }
+
+int Car::get_max_v() { return agent->get_max_v(); }
+int Car::get_dr() { return agent->get_dr(); }
+int Car::get_a_plus() { return agent->get_a_plus(); }
+int Car::get_a_minus() { return agent->get_a_minus(); }
+int Car::get_force_lane_change() { return agent->get_force_lane_change(); }
+double Car::get_change_bias() { return agent->get_change_bias(); }
+double Car::get_wait_percent() { return agent->get_wait_percent(); }

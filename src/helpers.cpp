@@ -6,7 +6,6 @@
 #include <random>
 #include <sstream>
 
-#include "roundabout.h"
 #include "settings.h"
 
 bool is_head(Car *car) { return (car && !car->get_is_tail()); }
@@ -58,18 +57,18 @@ int d_f(int v) {
     return v + d_brake(v);
 }
 
-int d_acc(int v, int v_next) {
-    int d_acc = (d_f(v + A_PLUS) + D_R) - d_brake(v_next);
+int d_acc(int v, int a_plus, int dr, int v_next) {
+    int d_acc = (d_f(v + a_plus) + dr) - d_brake(v_next);
     return std::max(0, d_acc);
 }
 
-int d_keep(int v, int v_next) {
-    int d_keep = (d_f(v) + D_R) - d_brake(v_next);
+int d_keep(int v, int dr, int v_next) {
+    int d_keep = (d_f(v) + dr) - d_brake(v_next);
     return std::max(0, d_keep);
 }
 
-int d_dec(int v, int v_next) {
-    int d_dec = (d_f(v + A_MINUS) + D_R) - d_brake(v_next);
+int d_dec(int v, int a_minus, int dr, int v_next) {
+    int d_dec = (d_f(v + a_minus) + dr) - d_brake(v_next);
     return std::max(0, d_dec);
 }
 
@@ -136,15 +135,8 @@ std::string get_output_file_path() {
     return directoryPath + "/output.txt";
 }
 
-void fundamental_diagram(double island_radius,
-                         std::vector<std::vector<std::vector<int>>> &entries,
-                         std::vector<std::vector<int>> &exits,
-                         int number_of_lanes, int max_velocity, int exits_entries_len, int samples,
-                         int step, int from, int to) {
+void fundamental_diagram(Roundabout &rbt, int samples, int step, bool only_rbt, int from, int to) {
     double flow, avg_density;
-    std::ofstream history_file(get_output_file_path());
-
-    Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, 100.0, exits_entries_len);
     std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n0:0.000000:0.000000\n";
 
     for (int density = from; density <= to; density += step) {
@@ -152,18 +144,20 @@ void fundamental_diagram(double island_radius,
         avg_density = 0.0;
 
         for (int sample = 0; sample < samples; sample++) {
-            Roundabout rbt(island_radius, entries, exits, number_of_lanes, max_velocity, density, exits_entries_len);
+            rbt.set_max_density(density);
             rbt.simulate(200);
             rbt.set_saving(true);
             rbt.simulate(1000);
             flow += rbt.get_flow();
-            avg_density += rbt.get_avg_density();
+            avg_density += only_rbt ? rbt.get_avg_density_rbt() : rbt.get_avg_density();
+            rbt.reset_rbt();
         }
         flow /= samples;
         avg_density /= samples;
         history += std::to_string(density) + ":" + std::to_string(flow) + ":" + std::to_string(avg_density) + "\n";
     }
 
+    std::ofstream history_file(get_output_file_path());
     history_file << history;
     history_file.close();
 

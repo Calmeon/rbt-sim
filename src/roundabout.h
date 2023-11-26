@@ -9,8 +9,8 @@
 
 class Roundabout {
     double island_radius;             // roundabout island radius in m
-    int max_velocity;                 // max velocity in m/s
     double max_density;               // max car denisty on the road <0,100>
+    bool only_rbt;                    // flag if density should count exits/entries
     int capacity;                     // current capacity of roundabout(with exits/entries)
     int capacity_rbt;                 // current capacity of roundabout
     int max_capacity;                 // max capacity of roundabout(with exits/entries)
@@ -40,6 +40,10 @@ class Roundabout {
     // which lanes can be accesed from entry
     std::map<int, std::vector<int>> entries_lanes;
 
+    // vector with available actors
+    std::vector<Agent *> agents;
+    std::map<int, int> agents_chances;
+
     std::set<Car *> moved;     // helper set for moved cars
     std::set<Car *> adjusted;  // helper set for cars with adjusted v
 
@@ -65,7 +69,7 @@ class Roundabout {
     void adjust_velocities();
 
     int calculate_another_lane_idx(int car_idx, int current_lane, int destination_lane, bool forward = true);
-    int change_lane_decision(int car_idx, int lane_number, int v, Car *car = nullptr, int dest = -1);
+    int change_lane_decision(int car_idx, int lane_number, int v, int destination, double change_bias = 0.0);
     void change_lanes();
 
     void enter();
@@ -75,6 +79,7 @@ class Roundabout {
     void move();
 
     void delete_cars(std::vector<Car *> &lane);
+    void delete_all_cars();
 
    public:
     Roundabout(
@@ -82,11 +87,12 @@ class Roundabout {
         std::vector<std::vector<std::vector<int>>> &entries,
         std::vector<std::vector<int>> &exits,
         int number_of_lanes = 1,
-        int max_velocity = 9,
         double max_density = 100.0,
-        int exits_entries_len = 50);
+        int exits_entries_len = 16);
     ~Roundabout();
 
+    void set_max_density(double density);
+    void set_only_rbt(bool only_rbt);
     std::string get_info();
     double get_density();
     double get_density_rbt();
@@ -94,11 +100,14 @@ class Roundabout {
     double get_avg_density();
     double get_avg_density_rbt();
 
-    void add_car(int entry, int v, int space, int destination);
+    void add_car(int entry, int v, int space, int destination, Agent *agent);
+    void add_agent(int max_v, int dr, int a_plus, int a_minus, int force_lane_change,
+                   double change_bias, double wait_percent, int chance);
     void set_saving(bool save);
     void print();
     void save_history();
-    void space_time_diagram(int start, int no_steps);
+    void space_time_diagram(int no_steps, bool only_rbt = false, int start = 200);
+    void reset_rbt();
     // one step of simulation
     void simulate();
     // multiple steps of simulation

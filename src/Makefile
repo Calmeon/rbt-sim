@@ -3,7 +3,7 @@ FLAGS = -g -Wall
 
 all: main.out
 
-main.out: main.o car.o roundabout.o helpers.o settings.o
+main.out: main.o car.o roundabout.o helpers.o settings.o agent.o
 	$(CC) $(FLAGS) $^ -o $@
 
 
@@ -22,6 +22,8 @@ helpers.o: helpers.cpp
 settings.o: settings.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
+agent.o: agent.cpp
+	$(CC) $(FLAGS) -c $^ -o $@
 
 # Run simulation
 run: main.out
