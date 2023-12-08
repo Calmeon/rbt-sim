@@ -19,7 +19,7 @@ def read_file(filename):
 
 
 def plot(densities, flows, folder_path):
-    coeff = np.polyfit(densities, flows, 4)
+    coeff = np.polyfit(densities, flows, 10)
     poly1d = np.poly1d(coeff)
 
     xn = np.linspace(min(densities), max(densities), 1000)

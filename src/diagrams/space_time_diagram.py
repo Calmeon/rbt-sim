@@ -82,6 +82,10 @@ def plot(folder_path, rbt_dict, lane_lengths):
     folder_path += "/space_time_diagrams"
     if not Path(f"{folder_path}/").exists():
         Path(f"{folder_path}").mkdir()
+    if not Path(f"{folder_path}/Entries").exists():
+        Path(f"{folder_path}/Entries").mkdir()
+    if not Path(f"{folder_path}/Exits").exists():
+        Path(f"{folder_path}/Exits").mkdir()
 
     entries = []
     exits = []
@@ -119,8 +123,15 @@ def plot(folder_path, rbt_dict, lane_lengths):
         plt.title(key)
         plt.tight_layout()
 
-        plt.savefig(f"{folder_path}/{key}.png")
+        if key.startswith("Entry"):
+            save_folder = f"{folder_path}/Entries/{key}.png"
+        elif key.startswith("Exit"):
+            save_folder = f"{folder_path}/Exits/{key}.png"
+        else:
+            save_folder = f"{folder_path}/{key}.png"
+        plt.savefig(save_folder)
         plt.clf()
+        plt.close()
 
 
 seed = sys.argv[1]
