@@ -31,7 +31,7 @@ run: main.out
 
 # Run simulation with valgrind
 memcheck: main.out
-	valgrind --leak-check=yes --track-origins=yes ./main.out
+	valgrind --leak-check=yes --track-origins=yes -s ./main.out
 
 # Delete files generated in process
 clean:

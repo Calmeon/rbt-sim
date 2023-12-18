@@ -9,6 +9,7 @@
 
 class Roundabout {
     double island_radius;             // roundabout island radius in m
+    int max_velocity;                 // max velocity of agent
     double max_density;               // max car denisty on the road <0,100>
     bool only_rbt;                    // flag if density should count exits/entries
     int capacity;                     // current capacity of roundabout(with exits/entries)
@@ -28,10 +29,13 @@ class Roundabout {
      * 2 - outer lane
      */
     std::vector<std::vector<Car *>> lanes;
+    std::vector<std::vector<Car *>> lanes_next;
 
     // key - where connected, value - lane
     std::map<int, std::vector<Car *>> entries;
+    std::map<int, std::vector<Car *>> entries_next;
     std::map<int, std::vector<Car *>> exits;
+    std::map<int, std::vector<Car *>> exits_next;
 
     // key - where, value - chance(0-100)
     std::map<int, int> entries_chances;
@@ -44,7 +48,6 @@ class Roundabout {
     std::vector<Agent *> agents;
     std::map<int, int> agents_chances;
 
-    std::set<Car *> moved;     // helper set for moved cars
     std::set<Car *> adjusted;  // helper set for cars with adjusted v
 
     bool saving;          // turns saving steps
@@ -54,17 +57,18 @@ class Roundabout {
     // utility functions
     std::string prepare_string();
     void save();
-    bool is_moved(Car *car);
     // functions with ee sufix are for exits/entries
     void delete_tails_ee(std::map<int, std::vector<Car *>> &e);
     void delete_tails();
+    void clear_next();
     void fix_tails_ee(std::map<int, std::vector<Car *>> &e);
     void fix_tails();
     // transition functions
     void generate_cars();
 
     void save_velocities();
-    void adjust_velocity(std::vector<Car *> &lane, bool ee, bool entry, bool outer_lane = -1);
+    void adjust_velocity_car(Car *car, int d_to_next, int next_car_v_old);
+    void adjust_velocity_lane(std::vector<Car *> &lane, bool ee = false);
     void adjust_velocities_ee(std::map<int, std::vector<Car *>> &e);
     void adjust_velocities();
 
@@ -75,7 +79,7 @@ class Roundabout {
     void enter();
     void exit();
 
-    void move_ee(std::map<int, std::vector<Car *>> &e);
+    void move_ee(std::map<int, std::vector<Car *>> &e, bool exit = false);
     void move();
 
     void delete_cars(std::vector<Car *> &lane);
@@ -102,7 +106,7 @@ class Roundabout {
 
     void add_car(int entry, int v, int space, int destination, Agent *agent);
     void add_agent(int max_v, int dr, int a_plus, int a_minus, int force_lane_change,
-                   double change_bias, double wait_percent, int chance);
+                   double change_bias, double wait_percent, int chance = 1);
     void set_saving(bool save);
     void print();
     void save_history();

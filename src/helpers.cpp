@@ -11,6 +11,10 @@
 bool is_head(Car *car) { return (car && !car->get_is_tail()); }
 bool is_tail(Car *car) { return (car && car->get_is_tail()); }
 
+bool contains(std::set<Car *> &set, Car *car) {
+    return set.find(car) != set.end();
+}
+
 int proper_idx(std::vector<Car *> &lane, int idx) {
     int size = lane.size();
     return (idx + size) % size;
@@ -57,19 +61,19 @@ int d_f(int v) {
     return v + d_brake(v);
 }
 
-int d_acc(int v, int a_plus, int dr, int v_next) {
-    int d_acc = (d_f(v + a_plus) + dr) - d_brake(v_next);
-    return std::max(0, d_acc);
+double d_acc(int v, int a_plus, double g, int v_next) {
+    double d_acc = ((double)d_f(v + a_plus) + g) - (double)d_brake(v_next);
+    return std::max(0.0, d_acc);
 }
 
-int d_keep(int v, int dr, int v_next) {
-    int d_keep = (d_f(v) + dr) - d_brake(v_next);
-    return std::max(0, d_keep);
+double d_keep(int v, double g, int v_next) {
+    double d_keep = ((double)d_f(v) + g) - (double)d_brake(v_next);
+    return std::max(0.0, d_keep);
 }
 
-int d_dec(int v, int a_minus, int dr, int v_next) {
-    int d_dec = (d_f(v + a_minus) + dr) - d_brake(v_next);
-    return std::max(0, d_dec);
+double d_dec(int v, int a_minus, double g, int v_next) {
+    double d_dec = ((double)d_f(v + a_minus) + g) - (double)d_brake(v_next);
+    return std::max(0.0, d_dec);
 }
 
 /*
@@ -162,6 +166,17 @@ void fundamental_diagram(Roundabout &rbt, int samples, int step, bool only_rbt, 
     history_file.close();
 
     std::string python_script = "python3 diagrams/fundamental_diagram.py " + std::to_string(seed);
-    std::cout << "Creating diagram..." << std::endl;
+    std::cout << "Creating diagram...\n";
     system(python_script.c_str());
+}
+
+void print_error(std::string function, std::string lane_type, int lane_number, int idx, int second) {
+    std::cerr << "==========ERROR=========="
+              << "\nSeed: " << seed
+              << "\nSecond: " << second
+              << "\nFunction: " << function
+              << "\nLane type: " << lane_type
+              << "\nLane number: " << lane_number
+              << "\nIndex: " << idx
+              << "\n=========================\n";
 }
