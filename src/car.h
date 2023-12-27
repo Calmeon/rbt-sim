@@ -3,8 +3,8 @@
 #include "agent.h"
 
 class Car {
-    int v;      // velocity in m/s
-    int v_old;  // velocity in previous step
+    int v;              // velocity in m/s
+    int v_old;          // velocity in previous step
     int v_used;
     int space;          // space ocuppied
     int destination;    // which exit will car use
@@ -13,6 +13,7 @@ class Car {
     int waiting;        // how many steps is car waiting for lane change
     int tail_number;    // tail property which segment it is head = 1
     Agent *agent;       // Agent profile
+    int exited_from;    // From which lane car exited
 
    public:
     // head constructor
@@ -34,6 +35,8 @@ class Car {
     bool get_is_tail();
     int get_starting_from();
     int get_destination();
+    void set_exited_from(int exited_from);
+    int get_exited_from();
     void set_waiting(int waiting);
     int get_waiting();
     Car *get_head();

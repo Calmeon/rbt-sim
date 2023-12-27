@@ -2,8 +2,9 @@
 
 #include <map>
 
-#define DEBUG false
+#define DEBUG true
 
+#define SEGMENT_LENGTH 1.0
 #define ROAD_WIDTH 4.0
 
 #define V_M 5

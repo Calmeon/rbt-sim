@@ -128,7 +128,7 @@ std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int int
     return result;
 }
 
-std::string get_output_file_path() {
+std::string get_output_file_path(std::string filename) {
     // create history folder
     std::string historyPath = "../history";
     if (!std::filesystem::exists(historyPath)) std::filesystem::create_directory(historyPath);
@@ -136,10 +136,10 @@ std::string get_output_file_path() {
     std::string directoryPath = "../history/" + std::to_string(seed);
     if (!std::filesystem::exists(directoryPath)) std::filesystem::create_directory(directoryPath);
 
-    return directoryPath + "/output.txt";
+    return directoryPath + "/" + filename + ".txt";
 }
 
-void fundamental_diagram(Roundabout &rbt, int samples, int step, bool only_rbt, int from, int to) {
+void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to, std::string title, bool only_rbt) {
     double flow, avg_density;
     std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n0:0.000000:0.000000\n";
 
@@ -161,10 +161,12 @@ void fundamental_diagram(Roundabout &rbt, int samples, int step, bool only_rbt, 
         history += std::to_string(density) + ":" + std::to_string(flow) + ":" + std::to_string(avg_density) + "\n";
     }
 
-    std::ofstream history_file(get_output_file_path());
+    std::ofstream history_file(get_output_file_path(title));
     history_file << history;
     history_file.close();
+}
 
+void fundamental_diagram() {
     std::string python_script = "python3 diagrams/fundamental_diagram.py " + std::to_string(seed);
     std::cout << "Creating diagram...\n";
     system(python_script.c_str());

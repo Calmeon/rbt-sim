@@ -34,10 +34,11 @@ int weighted_random_choice(std::map<int, int> &dict);
 std::string prepare_string_lane(std::vector<Car *> &lane,
                                 std::string s, int intend = 10);
 
-std::string get_output_file_path();
+std::string get_output_file_path(std::string filename = "output");
 
-void fundamental_diagram(Roundabout &rbt, int samples = 3, int step = 5,
-                         bool only_rbt = false, int from = 5, int to = 100);
+void prepare_fundamental(Roundabout &rbt, int samples, int step, int from,
+                         int to, std::string title = "output", bool only_rbt = true);
+void fundamental_diagram();
 
 void print_error(std::string function, std::string lane_type,
                  int lane_number, int idx, int second);

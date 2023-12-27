@@ -11,6 +11,7 @@ Car::Car(int v, int space, int destination, int starting_from, Agent *agent) {
     this->waiting = 0;
     this->tail_number = 1;
     this->agent = agent;
+    this->exited_from = -1;
 }
 Car::Car(Car *head, int tail_number) {
     this->head = head;
@@ -31,6 +32,8 @@ int Car::get_tail_number() { return tail_number; }
 bool Car::get_is_tail() { return head; }
 int Car::get_starting_from() { return starting_from; }
 int Car::get_destination() { return destination; }
+void Car::set_exited_from(int exited_from) { this->exited_from = exited_from; }
+int Car::get_exited_from() { return exited_from; }
 void Car::set_waiting(int waiting) { this->waiting = waiting; }
 int Car::get_waiting() { return waiting; }
 Car *Car::get_head() { return head ? head : this; }

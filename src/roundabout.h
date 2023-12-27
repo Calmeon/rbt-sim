@@ -110,7 +110,7 @@ class Roundabout {
     void set_saving(bool save);
     void print();
     void save_history();
-    void space_time_diagram(int no_steps, bool only_rbt = false, int start = 200);
+    void space_time_diagram(int no_steps, int start = 200, bool only_rbt = true);
     void reset_rbt();
     // one step of simulation
     void simulate();

@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def read_file(filename):
@@ -18,26 +19,64 @@ def read_file(filename):
     return densities, flows
 
 
-def plot(densities, flows, folder_path):
-    coeff = np.polyfit(densities, flows, 10)
+def extract_number(filename):
+    return int(filename.split("=")[1].split(".")[0])
+
+
+def plot_comparison(folder_path):
+    densities = []
+    flows = []
+
+    file_list = os.listdir(folder_path)
+    file_list = [filename for filename in file_list if filename.endswith(".txt")]
+    file_list = sorted(file_list, key=extract_number)
+
+    max_flow = 0
+    for filename in file_list:
+        if filename.endswith(".txt"):
+            file_path = os.path.join(folder_path, filename)
+            densities, flows = read_file(file_path)
+            max_flow = max(max_flow, *flows)
+            label = os.path.splitext(filename)[0]
+            plot(densities, flows, "", label)
+
+    plt.ylim(0, max_flow * 1.1)
+    plt.legend()
+    plt.savefig(f"{folder_path}/fundamental_diagram.png")
+
+
+def plot(densities, flows, folder_path="", label=""):
+    coeff = np.polyfit(densities, flows, 4)
     poly1d = np.poly1d(coeff)
 
     xn = np.linspace(min(densities), max(densities), 1000)
     yn = poly1d(xn)
 
-    plt.plot(xn, yn)
-    plt.scatter(densities, flows)
+    # plt.scatter(densities, flows)
+    if label == "":
+        plt.plot(xn, yn)
+    else:
+        plt.plot(xn, yn, label=label)
 
     plt.title("Fundamental diagram")
     plt.xlim(densities[0], densities[-1])
     plt.ylim(0, max(flows) * 1.1)
     plt.xlabel("Density (%)")
     plt.ylabel("Flow (veh/h)")
-    plt.savefig(f"{folder_path}/fundamental_diagram.png")
+    if folder_path != "":
+        plt.savefig(f"{folder_path}/fundamental_diagram.png")
 
 
-seed = sys.argv[1]
-folder_path = f"../history/{seed}"
-densities, flows = read_file(f"{folder_path}/output.txt")
+def main():
+    seed = sys.argv[1]
+    folder_path = f"../history/{seed}"
 
-plot(densities, flows, folder_path)
+    if os.path.isfile(f"{folder_path}/output.txt"):
+        densities, flows = read_file(f"{folder_path}/output.txt")
+        plot(densities, flows, folder_path)
+    else:
+        plot_comparison(folder_path)
+
+
+if __name__ == "__main__":
+    main()
