@@ -46,7 +46,7 @@ Roundabout::Roundabout(
     // calculate and initialize lanes
     // from circle circuit formula assign appropiate lengths
     for (int lane = 0; lane < number_of_lanes; lane++) {
-        length = 2 * M_PI * (radius + ROAD_WIDTH * (double)lane) / SEGMENT_LENGTH;
+        length = 2 * M_PI * (radius + ROAD_WIDTH * (double)lane);
         no_cells = (int)floor(length / SEGMENT_LENGTH);
         this->lanes.push_back(std::vector<Car *>(no_cells, nullptr));
         this->lanes_next.push_back(std::vector<Car *>(no_cells, nullptr));
@@ -64,22 +64,26 @@ Roundabout::Roundabout(
 
     this->info += "\nEntries:\t";
     // initialize entries
+    int entry_cell;
     for (auto &entry : entries) {
         auto entry_params = entry[0];
-        this->entries_lanes[entry_params[0]] = entry[1];
-        this->entries[entry_params[0]] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->entries_next[entry_params[0]] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->entries_chances[entry_params[0]] = entry_params[1];
-        this->info += std::to_string(entry_params[0]) + "(e):" + std::to_string(entry_params[1]) + "(w)\t";
+        entry_cell = round(entry_params[0] / SEGMENT_LENGTH);
+        this->entries_lanes[entry_cell] = entry[1];
+        this->entries[entry_cell] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->entries_next[entry_cell] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->entries_chances[entry_cell] = entry_params[1];
+        this->info += std::to_string(entry_cell) + "(e):" + std::to_string(entry_params[1]) + "(w)\t";
         this->max_capacity += exits_entries_len;
     }
     this->info += "\nExits:\t\t";
     // initialize exits
+    int exit_cell;
     for (auto &exit : exits) {
-        this->exits[exit[0]] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->exits_next[exit[0]] = std::vector<Car *>(exits_entries_len, nullptr);
-        this->exits_chances[exit[0]] = exit[1];
-        this->info += std::to_string(exit[0]) + "(e):" + std::to_string(exit[1]) + "(w)\t";
+        exit_cell = round(exit[0] / SEGMENT_LENGTH);
+        this->exits[exit_cell] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->exits_next[exit_cell] = std::vector<Car *>(exits_entries_len, nullptr);
+        this->exits_chances[exit_cell] = exit[1];
+        this->info += std::to_string(exit_cell) + "(e):" + std::to_string(exit[1]) + "(w)\t";
         this->max_capacity += exits_entries_len;
     }
 
@@ -98,7 +102,7 @@ std::string Roundabout::prepare_string() {
     std::string s, result = "\n";
     int l = 0;
 
-    if (DEBUG || true) {
+    if (DEBUG) {
         result += "second: " + std::to_string(second) + "\n";
     }
     for (auto &lane : lanes) {
@@ -161,7 +165,7 @@ void Roundabout::clear_next() {
 }
 
 void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
-    int tail_idx, space, destination;
+    int tail_idx, space;
     Car *car;
 
     for (auto &pair : e) {
@@ -187,14 +191,13 @@ void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
                         lanes[lanes.size() - 1][car->get_destination()] = new Car(car, car->get_space() - space + 1);
                         space--;
                     }
-                    // destination = calculate_another_lane_idx(car->get_destination(), lanes.size() - 1, car->get_exited_from()); // 221 space= 7
-                    // tail_idx = destination - space + 1;
-                    // tail_idx = proper_idx(lanes[car->get_exited_from()], destination);
                     tail_idx = calculate_another_lane_idx(car->get_destination(), lanes.size() - 1, car->get_exited_from());
                     while (space) {
-                        if (lanes[car->get_exited_from()][tail_idx]) {
+                        if (is_head(lanes[car->get_exited_from()][tail_idx])) {
                             history += "==========ERROR==========\n";
                             print_error("fix_tails_ee", "exit", pair.first, tail_idx, second);
+                        } else {
+                            delete lanes[car->get_exited_from()][tail_idx];
                         }
                         lanes[car->get_exited_from()][tail_idx] = new Car(car, car->get_space() - space + 1);
                         tail_idx = proper_idx(lanes[car->get_exited_from()], --tail_idx);
@@ -286,7 +289,7 @@ void Roundabout::generate_cars() {
                 space = weighted_random_choice(cars_sizes);
                 v = rand() % (V_M + 1);
                 add_car(entry, v, space, destination, agents[agent_idx]);
-                break;
+                // break; // with it every entry is filled every time
             }
         }
         entries_chances_copy.erase(entry);
@@ -536,15 +539,15 @@ void Roundabout::enter() {
 }
 
 void Roundabout::exit() {
-    int d_to_exit, d_to_next, next_v;
+    int d_to_exit, d_to_next, next_v, idx_next, new_v;
     int d_to_prev, idx_prev;
-    int outer_lane_idx, destination;
+    int destination;
     Car *car, *next_car, *prev_car;
     bool stop;
     int outer_lane_number = lanes.size() - 1;
 
     // exit only from 2 most outer lanes
-    for (int lane_idx = outer_lane_number; lane_idx > outer_lane_number - 2; lane_idx--) {
+    for (int lane_idx = outer_lane_number - 1; lane_idx <= outer_lane_number; lane_idx++) {
         std::vector<Car *> &lane = lanes[lane_idx];
         for (int idx = 0; idx < (int)lane.size(); idx++) {
             car = lane[idx];
@@ -552,8 +555,19 @@ void Roundabout::exit() {
                 destination = calculate_another_lane_idx(car->get_destination(), outer_lane_number, lane_idx);
                 d_to_exit = proper_idx(lane, destination - idx);
                 d_to_next = find_next(lane, idx);
+                // get next car and adjust v to it
+                idx_next = proper_idx(lane, idx + d_to_next + 1);
+                next_car = lane[idx_next];
+                d_to_next -= (next_car->get_space() - next_car->get_tail_number());
+
+                next_v = next_car->get_v_old();
+                adjust_velocity_car(car, d_to_next, next_v);
+
+                new_v = car->get_v();
+                car->set_v(car->get_v_old());
+
                 stop = true;
-                if (d_to_exit <= d_to_next) {
+                if (d_to_exit <= d_to_next || new_v > d_to_exit) {
                     while (true) {
                         if (exits[car->get_destination()][0]) {
                             // exit occupied
@@ -604,6 +618,10 @@ void Roundabout::exit() {
                         fix_tails();
                         capacity_rbt -= car->get_space();
                     }
+                    adjusted.insert(car);
+                } else if (car->get_max_v() * 2 > d_to_exit) {
+                    adjust_velocity_car(car, d_to_exit, 0);
+                    car->set_v(std::min(car->get_v(), new_v));
                     adjusted.insert(car);
                 }
             }
@@ -790,8 +808,8 @@ void Roundabout::space_time_diagram(int no_steps, int start, bool only_rbt) {
 
     save_history();
     std::string python_script = "python3 diagrams/space_time_diagram.py " + std::to_string(seed);
-    // std::cout << "Creating diagrams...\n";
-    // system(python_script.c_str());
+    std::cout << "Creating diagrams...\n";
+    system(python_script.c_str());
 }
 
 void Roundabout::reset_rbt() {
