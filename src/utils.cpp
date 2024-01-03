@@ -1,4 +1,4 @@
-#include "helpers.h"
+#include "utils.h"
 
 #include <filesystem>
 #include <fstream>
@@ -52,8 +52,9 @@ int find_prev(std::vector<Car *> &lane, int idx) {
 int d_brake(int v) {
     int result = 0;
     int no_steps = v / V_M;
-    for (int i = 1; i <= no_steps; i++)
+    for (int i = 1; i <= no_steps; i++) {
         result += (v - i * V_M);
+    }
     return result;
 }
 
@@ -139,7 +140,7 @@ std::string get_output_file_path(std::string filename) {
     return directoryPath + "/" + filename + ".txt";
 }
 
-void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to, std::string title, bool only_rbt) {
+void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to, std::string title) {
     double flow, avg_density;
     std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n0:0.000000:0.000000\n";
 
@@ -153,7 +154,7 @@ void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int t
             rbt.set_saving(true);
             rbt.simulate(1000);
             flow += rbt.get_flow();
-            avg_density += only_rbt ? rbt.get_avg_density_rbt() : rbt.get_avg_density();
+            avg_density += rbt.get_avg_density();
             rbt.reset_rbt();
         }
         flow /= samples;

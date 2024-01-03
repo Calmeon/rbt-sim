@@ -8,18 +8,14 @@
 #include "car.h"
 
 class Roundabout {
-    double island_radius;             // roundabout island radius in m
-    int max_velocity;                 // max velocity of agent
-    double max_density;               // max car denisty on the road <0,100>
-    bool only_rbt;                    // flag if density should count exits/entries
-    int capacity;                     // current capacity of roundabout(with exits/entries)
-    int capacity_rbt;                 // current capacity of roundabout
-    int max_capacity;                 // max capacity of roundabout(with exits/entries)
-    int max_capacity_rbt;             // max capacity of roundabout
-    int second;                       // second of simulation (no. steps)
-    double cumulative_densities;      // store densities for avg. calculation
-    double cumulative_densities_rbt;  // store densities for avg. calculation (only rbt)
-    int cars_left;                    // how much cars exited roundabout
+    double island_radius;         // roundabout island radius in m
+    int max_v;                    // max velocity of agent
+    double max_density;           // max given car denisty on the road <0,100>
+    int max_capacity;             // max capacity of roundabout
+    int capacity;                 // current capacity of roundabout
+    double cumulative_densities;  // store densities for avg. calculation
+    int cars_left;                // how much cars exited roundabout
+    int second;                   // second of simulation (no. steps)
     /*
      * 2D vector with rbt lanes
      * smaller idx = lane closer to the island
@@ -34,15 +30,13 @@ class Roundabout {
     // key - where connected, value - lane
     std::map<int, std::vector<Car *>> entries;
     std::map<int, std::vector<Car *>> entries_next;
-    std::map<int, std::vector<Car *>> exits;
-    std::map<int, std::vector<Car *>> exits_next;
-
-    // key - where, value - chance(0-100)
     std::map<int, int> entries_chances;
-    std::map<int, int> exits_chances;
-
     // which lanes can be accesed from entry
     std::map<int, std::vector<int>> entries_lanes;
+
+    std::map<int, std::vector<Car *>> exits;
+    std::map<int, std::vector<Car *>> exits_next;
+    std::map<int, int> exits_chances;
 
     // vector with available actors
     std::vector<Agent *> agents;
@@ -57,13 +51,16 @@ class Roundabout {
     // utility functions
     std::string prepare_string();
     void save();
+
     // functions with ee sufix are for exits/entries
     void delete_tails_ee(std::map<int, std::vector<Car *>> &e);
     void delete_tails();
     void clear_next();
     void fix_tails_ee(std::map<int, std::vector<Car *>> &e);
     void fix_tails();
+
     // transition functions
+    void add_car(int entry, int v, int space, int destination, Agent *agent);
     void generate_cars();
 
     void save_velocities();
@@ -90,28 +87,26 @@ class Roundabout {
         double island_radius,
         std::vector<std::vector<std::vector<int>>> &entries,
         std::vector<std::vector<int>> &exits,
-        int number_of_lanes = 1,
+        int number_of_lanes,
         double max_density = 100.0,
+        int max_v = 9,
         int exits_entries_len = 16);
     ~Roundabout();
 
     void set_max_density(double density);
-    void set_only_rbt(bool only_rbt);
+    void add_agent(int dr, int a_plus, int a_minus, double wait_percent,
+                   double change_bias = 0.0, int chance = 1);
+    void set_saving(bool save);
+
     std::string get_info();
     double get_density();
-    double get_density_rbt();
-    double get_flow();
     double get_avg_density();
-    double get_avg_density_rbt();
+    double get_flow();
 
-    void add_car(int entry, int v, int space, int destination, Agent *agent);
-    void add_agent(int max_v, int dr, int a_plus, int a_minus, int force_lane_change,
-                   double change_bias, double wait_percent, int chance = 1);
-    void set_saving(bool save);
-    void print();
     void save_history();
-    void space_time_diagram(int no_steps, int start = 200, bool only_rbt = true);
+    void space_time_diagram(int no_steps, int start = 200);
     void reset_rbt();
+
     // one step of simulation
     void simulate();
     // multiple steps of simulation

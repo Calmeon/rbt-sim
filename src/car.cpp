@@ -8,7 +8,6 @@ Car::Car(int v, int space, int destination, int starting_from, Agent *agent) {
     this->destination = destination;
     this->starting_from = starting_from;
     this->head = nullptr;
-    this->waiting = 0;
     this->tail_number = 1;
     this->agent = agent;
     this->exited_from = -1;
@@ -34,15 +33,11 @@ int Car::get_starting_from() { return starting_from; }
 int Car::get_destination() { return destination; }
 void Car::set_exited_from(int exited_from) { this->exited_from = exited_from; }
 int Car::get_exited_from() { return exited_from; }
-void Car::set_waiting(int waiting) { this->waiting = waiting; }
-int Car::get_waiting() { return waiting; }
 Car *Car::get_head() { return head ? head : this; }
 
-int Car::get_max_v() { return agent->get_max_v(); }
 int Car::get_dr() { return agent->get_dr(); }
-double Car::get_g() { return (double)get_dr() * ((double)v / (double)get_max_v()); }
+double Car::get_g(int max_v) { return (double)get_dr() * ((double)v / (double)max_v); }
 int Car::get_a_plus() { return agent->get_a_plus(); }
 int Car::get_a_minus() { return agent->get_a_minus(); }
-int Car::get_force_lane_change() { return agent->get_force_lane_change(); }
-double Car::get_change_bias() { return agent->get_change_bias(); }
 double Car::get_wait_percent() { return agent->get_wait_percent(); }
+double Car::get_change_bias() { return agent->get_change_bias(); }

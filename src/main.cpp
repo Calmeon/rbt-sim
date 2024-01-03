@@ -1,7 +1,7 @@
 #include <iostream>
 #include <random>
 
-#include "helpers.h"
+#include "utils.h"
 #include "roundabout.h"
 #include "settings.h"
 
@@ -47,38 +47,36 @@ int main(int argc, char *argv[]) {
                                         {192, 5},
 
                                         {221, 16},
-                                        {226, 14}
-                                        };
+                                        {226, 14}};
 
-    Roundabout rbt(28.5, entries, exits, 3, 31.0);
-    rbt.add_agent(5, 1, 2, -2, 3, 0.0, 0.1);
+    Roundabout rbt(28.5, entries, exits, 3);
+    rbt.add_agent(1, 2, -2, 0.1);
     rbt.space_time_diagram(3600);
-    // prepare_fundamental(rbt, 3, 1,  0, 25);
+    // prepare_fundamental(rbt, 3, 1,  0, 30);
     // fundamental_diagram();
 
-    // Roundabout
+    // // Roundabout
     // double radius = 28.5;
     // int no_lanes = 3;
 
     // // Agent
-    // int max_velocity = 9;
     // // int dr = 0;
+    // std::vector<int> drs{0, 1, 2, 3, 4, 5};
     // int a_plus = 2;
     // int a_minus = -2;
-    // int force_lane_change = 9999;
-    // double change_bias = 0.0;
     // double wait_percent = 0.1;
-    // std::vector<int> drs{0, 1, 2, 3, 5};
+    // double change_bias = 0.0;
 
     // // Simulations
     // int samples = 3;
     // int step = 1;
     // int from = 2;
-    // int to = 50;
+    // int to = 30;
 
     // for (auto dr : drs) {
+    //     std::cout << dr << "\n";
     //     Roundabout rbt(radius, entries, exits, no_lanes);
-    //     rbt.add_agent(max_velocity, dr, a_plus, a_minus, force_lane_change, change_bias, wait_percent);
+    //     rbt.add_agent(dr, a_plus, a_minus, wait_percent, change_bias);
     //     prepare_fundamental(rbt, samples, step, from, to, "dr=" + std::to_string(dr));
     // }
     // fundamental_diagram();

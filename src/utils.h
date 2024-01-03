@@ -15,10 +15,8 @@ bool contains(std::set<Car *> &set, Car *car);
 
 // corrects bad indexes (negative or beyond)
 int proper_idx(std::vector<Car *> &lane, int idx);
-
 // return distance to next car
 int find_next(std::vector<Car *> &lane, int idx);
-
 // return distance to previous car
 int find_prev(std::vector<Car *> &lane, int idx);
 
@@ -37,7 +35,7 @@ std::string prepare_string_lane(std::vector<Car *> &lane,
 std::string get_output_file_path(std::string filename = "output");
 
 void prepare_fundamental(Roundabout &rbt, int samples, int step, int from,
-                         int to, std::string title = "output", bool only_rbt = true);
+                         int to, std::string title = "output");
 void fundamental_diagram();
 
 void print_error(std::string function, std::string lane_type,
