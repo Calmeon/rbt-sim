@@ -9,7 +9,6 @@
 
 class Roundabout {
     double island_radius;         // roundabout island radius in m
-    int max_v;                    // max velocity of agent
     double max_density;           // max given car denisty on the road <0,100>
     int max_capacity;             // max capacity of roundabout
     int capacity;                 // current capacity of roundabout
@@ -89,7 +88,6 @@ class Roundabout {
         std::vector<std::vector<int>> &exits,
         int number_of_lanes,
         double max_density = 100.0,
-        int max_v = 9,
         int exits_entries_len = 16);
     ~Roundabout();
 

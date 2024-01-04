@@ -41,7 +41,7 @@ class Car {
     Car *get_head();
 
     int get_dr();
-    double get_g(int max_v);
+    double get_g();
     int get_a_plus();
     int get_a_minus();
     double get_wait_percent();

@@ -18,7 +18,6 @@ Roundabout::Roundabout(
     std::vector<std::vector<int>> &exits,
     int number_of_lanes,
     double max_density,
-    int max_v,
     int exits_entries_len) {
     // add to island radius half of raod width
     double radius = island_radius + ROAD_WIDTH / 2;
@@ -27,7 +26,6 @@ Roundabout::Roundabout(
 
     this->island_radius = island_radius;
     this->max_density = max_density;
-    this->max_v = max_v;
     this->second = 0;
     this->capacity = 0;
     this->max_capacity = 0;
@@ -274,7 +272,7 @@ void Roundabout::clear_next() {
 }
 
 void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
-    int tail_idx, space;
+    int tail_idx, exited_from_idx, space;
     Car *car;
 
     for (auto &pair : e) {
@@ -298,19 +296,20 @@ void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
                 if (space && e == exits) {
                     if (car->get_exited_from() != (int)lanes.size() - 1) {
                         lanes[lanes.size() - 1][car->get_destination()] = new Car(car, car->get_space() - space + 1);
-                        space--;
+                        space -= (int)(ROAD_WIDTH / SEGMENT_LENGTH);
                     }
-                    tail_idx = calculate_another_lane_idx(car->get_destination(), lanes.size() - 1, car->get_exited_from());
-                    while (space) {
-                        if (is_head(lanes[car->get_exited_from()][tail_idx])) {
-                            history += "==========ERROR==========\n";
-                            print_error("fix_tails_ee", "exit", pair.first, tail_idx, second);
-                        } else {
+                    exited_from_idx = calculate_another_lane_idx(car->get_destination(), lanes.size() - 1, car->get_exited_from());
+                    tail_idx = exited_from_idx;
+                    while (space > 0) {
+                        if (is_tail(lanes[car->get_exited_from()][tail_idx])) {
                             delete lanes[car->get_exited_from()][tail_idx];
+                            lanes[car->get_exited_from()][tail_idx] = nullptr;
                         }
-                        lanes[car->get_exited_from()][tail_idx] = new Car(car, car->get_space() - space + 1);
+                        if (!lanes[car->get_exited_from()][tail_idx]) {
+                            lanes[car->get_exited_from()][tail_idx] = new Car(car, car->get_space() - space + 1);
+                        }
+                        space -= (tail_idx == exited_from_idx) ? ((int)(ROAD_WIDTH / SEGMENT_LENGTH) / 2) : 1;
                         tail_idx = proper_idx(lanes[car->get_exited_from()], --tail_idx);
-                        space--;
                     }
                 }
             }
@@ -330,22 +329,21 @@ void Roundabout::fix_tails() {
             if (is_head(car)) {
                 space = car->get_space() - 1;
                 tail_idx = proper_idx(rbt_lane, idx - 1);
-                // add tail on same lane
-                while (space) {
+                // add tail onto same lane
+                while (space > 0) {
                     curr_lane_starting_from = calculate_another_lane_idx(car->get_starting_from(), outer_lane_idx, lane);
-                    if (tail_idx == proper_idx(rbt_lane, curr_lane_starting_from - 1))
-                        break;
+                    if (tail_idx == proper_idx(rbt_lane, curr_lane_starting_from - 1)) break;
                     if (rbt_lane[tail_idx]) {
                         history += "==========ERROR==========\n";
                         print_error("fix_tails", "lane", lane, tail_idx, second);
                     }
                     rbt_lane[tail_idx] = new Car(car, car->get_space() - space + 1);
                     tail_idx = proper_idx(rbt_lane, tail_idx - 1);
-                    space--;
+                    space -= (tail_idx == curr_lane_starting_from) ? ((int)(ROAD_WIDTH / SEGMENT_LENGTH) / 2) : 1;
                 }
                 curr_lane = lane;
                 // add tail on lanes to entry
-                while (space && curr_lane != outer_lane_idx) {
+                while (space > 0 && curr_lane != outer_lane_idx) {
                     curr_lane++;
                     tail_idx = calculate_another_lane_idx(car->get_starting_from(), outer_lane_idx, curr_lane);
                     if (lanes[curr_lane][tail_idx]) {
@@ -353,7 +351,7 @@ void Roundabout::fix_tails() {
                         print_error("fix_tails", "lane", curr_lane, tail_idx, second);
                     }
                     lanes[curr_lane][tail_idx] = new Car(car, car->get_space() - space + 1);
-                    space--;
+                    space -= (int)(ROAD_WIDTH / SEGMENT_LENGTH);
                 }
                 // add tail on entry
                 for (int t = 1; t <= space; t++) {
@@ -427,20 +425,20 @@ void Roundabout::save_velocities() {
 }
 
 void Roundabout::adjust_velocity_car(Car *car, int d_to_next, int next_car_v_old) {
-    double car_d_acc = d_acc(car->get_v_old(), car->get_a_plus(), car->get_g(max_v), next_car_v_old);
-    double car_d_keep = d_keep(car->get_v_old(), car->get_g(max_v), next_car_v_old);
-    double car_d_dec = d_dec(car->get_v_old(), car->get_a_minus(), car->get_g(max_v), next_car_v_old);
+    double car_d_acc = d_acc(car->get_v_old(), car->get_a_plus(), car->get_g(), next_car_v_old);
+    double car_d_keep = d_keep(car->get_v_old(), car->get_g(), next_car_v_old);
+    double car_d_dec = d_dec(car->get_v_old(), car->get_a_minus(), car->get_g(), next_car_v_old);
 
     int v_new = car->get_v_old();
     int vn = car->get_v_old();
 
     // accelerate
     if (d_to_next >= car_d_acc) {
-        v_new = std::min(vn + car->get_a_plus(), max_v);
+        v_new = std::min(vn + car->get_a_plus(), MAX_V);
     }
 
     // random deaccelerate
-    if ((d_to_next >= car_d_keep && d_to_next < car_d_acc) || vn == max_v) {
+    if ((d_to_next >= car_d_keep && d_to_next < car_d_acc) || vn == MAX_V) {
         if (((double)rand() / (RAND_MAX)) < R_S) {
             v_new = std::max(vn + car->get_a_minus(), 0);
         }
@@ -471,7 +469,7 @@ void Roundabout::adjust_velocity_lane(std::vector<Car *> &lane, bool ee) {
 
             if (ee && d_to_next >= to_end) {
                 // If it is last car on exit set params so it wouldn't slow down
-                d_to_next = max_v;
+                d_to_next = MAX_V;
                 next_car = nullptr;
             } else {
                 idx_next = proper_idx(lane, idx + d_to_next + 1);
@@ -482,7 +480,7 @@ void Roundabout::adjust_velocity_lane(std::vector<Car *> &lane, bool ee) {
                 d_to_next -= (next_car->get_space() - next_car->get_tail_number());
                 next_car_v_old = next_car->get_v_old();
             } else {
-                next_car_v_old = max_v;
+                next_car_v_old = MAX_V;
             }
 
             adjust_velocity_car(car, d_to_next, next_car_v_old);
@@ -502,7 +500,7 @@ void Roundabout::adjust_velocity_lane(std::vector<Car *> &lane, bool ee) {
                 } else {
                     // Check if next car is only tail or whole vehicle
                     Car *next_head = next_car->get_head();
-                    for (int idx_succ = 1; idx_succ <= max_v * 2; idx_succ++) {
+                    for (int idx_succ = 1; idx_succ <= MAX_V * 2; idx_succ++) {
                         idx_tmp = proper_idx(lane, idx + idx_succ);
                         if (is_head(lane[idx_tmp]) && lane[idx_tmp] != next_head) {
                             v_before = car->get_v();
@@ -584,20 +582,20 @@ void Roundabout::change_lanes() {
                         d_to_next = find_next(lanes[decision], new_idx);
                         next_car_idx = proper_idx(lanes[decision], new_idx + d_to_next + 1);
                         next_car = lanes[decision][next_car_idx];
-                        v_next = max_v;
+                        v_next = MAX_V;
                         if (next_car) {
                             d_to_next -= (next_car->get_space() - next_car->get_tail_number());
                             v_next = next_car->get_v_old();
                         }
                         // incentive criterion if I can brake to next car in time
-                        car_d_keep = d_keep(car->get_v_old(), car->get_g(max_v), v_next);
+                        car_d_keep = d_keep(car->get_v_old(), car->get_g(), v_next);
                         if (d_to_next < car_d_keep) break;
 
                         // safety criterion if car behind me can brake in time
                         prev_car = lanes[decision][proper_idx(lanes[decision], new_idx - d_to_prev - 1)];
                         d_to_prev -= (car->get_space() - 1);
                         if (is_head(prev_car)) {
-                            prev_d_dec = d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(max_v), car->get_v_old());
+                            prev_d_dec = d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(), car->get_v_old());
                             if (d_to_prev < prev_d_dec) break;
                         }
 
@@ -655,7 +653,7 @@ void Roundabout::enter() {
                     idx_next = proper_idx(lanes[decision], rbt_idx + d_to_next);
                     next_car = lanes[decision][idx_next];
 
-                    next_car_v_old = max_v;
+                    next_car_v_old = MAX_V;
                     // check if car would exit immediately
                     if (decision == outer_lane_idx) {
                         d_to_exit = proper_idx(lanes[decision], car->get_destination() - (car_entry - 1));
@@ -694,7 +692,7 @@ void Roundabout::enter() {
                     if (d_to_prev != (int)lanes[current_lane].size() - 1 && is_head(prev_car)) {
                         // safety criterion
                         d_to_prev -= (car->get_space() - 1);
-                        if (d_to_prev < d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(max_v), car->get_v() - to_end - 1)) {
+                        if (d_to_prev < d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(), car->get_v() - to_end - 1)) {
                             if (current_lane == outer_lane_idx) {
                                 // blinker
                                 d_to_prev_from_entry = proper_idx(lanes[current_lane], car_entry - idx_prev);
@@ -749,7 +747,7 @@ void Roundabout::exit() {
     // exit only from 2 most outer lanes
     for (int lane_idx = outer_lane_number - 1; lane_idx <= outer_lane_number; lane_idx++) {
         std::vector<Car *> &lane = lanes[lane_idx];
-        for (int idx = 0; idx < (int)lane.size(); idx++) {
+        for (int idx = lane.size() - 1; idx >= 0; idx--) {
             car = lane[idx];
             if (is_head(car) && !contains(adjusted, car)) {
                 destination = calculate_another_lane_idx(car->get_destination(), outer_lane_number, lane_idx);
@@ -774,7 +772,7 @@ void Roundabout::exit() {
 
                         d_to_next = d_to_exit + find_next(exits[car->get_destination()], -1);
                         next_car = exits[car->get_destination()][find_next(exits[car->get_destination()], -1)];
-                        next_v = next_car ? next_car->get_v_old() : max_v;
+                        next_v = next_car ? next_car->get_v_old() : MAX_V;
 
                         adjust_velocity_car(car, d_to_next, next_v);
 
@@ -792,7 +790,7 @@ void Roundabout::exit() {
                             if (d_to_prev != (int)lanes[outer_lane_number].size() - 1 && is_head(prev_car)) {
                                 // check if prev car would brake
                                 if (d_to_prev - (car->get_space() - 2) <
-                                    d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(max_v), car->get_v() - d_to_exit - 1)) {
+                                    d_dec(prev_car->get_v_old(), prev_car->get_a_minus(), prev_car->get_g(), car->get_v() - d_to_exit - 1)) {
                                     // blinker
                                     d_to_prev_from_his_exit = proper_idx(lanes[outer_lane_number], prev_car->get_destination() - idx_prev);
                                     if (d_to_prev < d_to_prev_from_his_exit) break;
@@ -816,7 +814,7 @@ void Roundabout::exit() {
                         capacity -= car->get_space();
                     }
                     adjusted.insert(car);
-                } else if (max_v * 2 > d_to_exit) {
+                } else if (MAX_V * 2 > d_to_exit) {
                     adjust_velocity_car(car, d_to_next, 0);
                     car->set_v(std::min(car->get_v(), new_v));
                     adjusted.insert(car);
