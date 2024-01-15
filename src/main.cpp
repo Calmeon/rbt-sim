@@ -53,6 +53,8 @@ int main(int argc, char *argv[]) {
     // compare_dr_in_types(entries, exits);
     // compare_dr_between_types(entries, exits);
 
+    std::cout << "Output files can be found in: "
+              << "../history/" << std::to_string(seed) << "\n";
     return 0;
 }
 
