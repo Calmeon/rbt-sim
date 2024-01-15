@@ -3,44 +3,16 @@ Implementation of a multi-agent system to study traffic efficiency on roundabout
 
 ## Repository content
 
-src -> Directory containing full source of an apllication
-
-## What has been done
-
-- Project setup
-- Base model
-    - Car consisting of the head and tail
-    - Transition function in circular motion
-        - accelerate
-        - brake
-        - move (with tails handling)
-    - Helper functions for future use
-- Entries
-    - Generating cars (weighted random)
-    - Transition functions
-    - Enter functionality (with tails remaining on entries)
-- Exits
-    - Transition functions
-    - Tails remaining on roundabout lane
-    - Cars disappearing at the end
-- Deterministic model (can set up fixed seed)
-- Plots (Spacetime diagram)
-    - Output text files from simulation 
-    - Folder structure
-    - Running python script for plots from main program
-    - Reading output.txt in python script
-- Multi lanes
-    - Calculating indexes on different lanes
-    - Choosing lane algorithm
-    - Change lane function
-    - Enter on different lanes
-- Fundamental diagram
-    - Cars generation based on density
-    - Function to generate data
-    - Ploting data
-    - Data approximation
-- Dynamic velocities based on math model
-- Giving way to cars changing lanes
-- Blinkers
-- Add agents
-- Add variables to lane change decision for agents
+- src: Directory containing the full source code of the application.
+    - main.cpp: Main program where research studies can be created.
+    - roundabout.(h/cpp): Main class of the program containing the logic of the system.
+    - car.(h/cpp): Class representing a car.
+    - agent.(h/cpp): Class representing an agent.
+    - settings.(h/cpp): Files where configuration parameters are set.
+    - utils.(h/cpp): Utility functions.
+    - Makefile: File automating the software building process.
+    - test.sh: Bash script to run the program multiple times to check stability.
+    - diagrams: Directory with Python files for visualization.
+        - fundamental_diagram.py: Program used to create fundamental diagrams, using single or multiple specification data.
+        - space_time_diagram.py: Program for creating space-time diagrams.
+        - latex_table.py: Program preparing a density report in LaTeX table format.
