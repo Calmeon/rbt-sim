@@ -3,7 +3,7 @@ FLAGS = -g -Wall
 
 all: main.out
 
-main.out: main.o car.o roundabout.o helpers.o settings.o
+main.out: main.o car.o roundabout.o utils.o settings.o agent.o
 	$(CC) $(FLAGS) $^ -o $@
 
 
@@ -16,12 +16,14 @@ car.o: car.cpp
 roundabout.o: roundabout.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
-helpers.o: helpers.cpp
+utils.o: utils.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
 settings.o: settings.cpp
 	$(CC) $(FLAGS) -c $^ -o $@
 
+agent.o: agent.cpp
+	$(CC) $(FLAGS) -c $^ -o $@
 
 # Run simulation
 run: main.out
@@ -29,7 +31,7 @@ run: main.out
 
 # Run simulation with valgrind
 memcheck: main.out
-	valgrind --leak-check=yes --track-origins=yes ./main.out
+	valgrind --leak-check=yes --track-origins=yes -s ./main.out
 
 # Delete files generated in process
 clean:

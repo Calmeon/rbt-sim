@@ -34,3 +34,13 @@ src -> Directory containing full source of an apllication
     - Choosing lane algorithm
     - Change lane function
     - Enter on different lanes
+- Fundamental diagram
+    - Cars generation based on density
+    - Function to generate data
+    - Ploting data
+    - Data approximation
+- Dynamic velocities based on math model
+- Giving way to cars changing lanes
+- Blinkers
+- Add agents
+- Add variables to lane change decision for agents
