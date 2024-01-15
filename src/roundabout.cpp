@@ -131,7 +131,7 @@ void Roundabout::save_history() {
     info += "Average density: " + std::to_string(get_avg_density()) + "\n";
     info += "Flow veh/h: " + std::to_string(cars_left) + "\n";
 
-    std::ofstream history_file(get_output_file_path());
+    std::ofstream history_file(get_output_file_path("output"));
     history_file << info;
     history.pop_back();  // delete last \n
     history_file << history;
@@ -284,9 +284,9 @@ void Roundabout::fix_tails_ee(std::map<int, std::vector<Car *>> &e) {
                 tail_idx = idx - 1;
                 while (space) {
                     if (tail_idx < 0) break;
-                    if (lane[tail_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("fix_tails_ee", "exit/entry", pair.first, tail_idx, second);
+                    if (lane[tail_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("fix_tails_ee", "exit/entry", pair.first, tail_idx, second);
                     }
                     lane[tail_idx] = new Car(car, car->get_space() - space + 1);
                     space--;
@@ -333,9 +333,9 @@ void Roundabout::fix_tails() {
                 while (space > 0) {
                     curr_lane_starting_from = calculate_another_lane_idx(car->get_starting_from(), outer_lane_idx, lane);
                     if (tail_idx == proper_idx(rbt_lane, curr_lane_starting_from - 1)) break;
-                    if (rbt_lane[tail_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("fix_tails", "lane", lane, tail_idx, second);
+                    if (rbt_lane[tail_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("fix_tails", "lane", lane, tail_idx, second);
                     }
                     rbt_lane[tail_idx] = new Car(car, car->get_space() - space + 1);
                     tail_idx = proper_idx(rbt_lane, tail_idx - 1);
@@ -346,9 +346,9 @@ void Roundabout::fix_tails() {
                 while (space > 0 && curr_lane != outer_lane_idx) {
                     curr_lane++;
                     tail_idx = calculate_another_lane_idx(car->get_starting_from(), outer_lane_idx, curr_lane);
-                    if (lanes[curr_lane][tail_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("fix_tails", "lane", curr_lane, tail_idx, second);
+                    if (lanes[curr_lane][tail_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("fix_tails", "lane", curr_lane, tail_idx, second);
                     }
                     lanes[curr_lane][tail_idx] = new Car(car, car->get_space() - space + 1);
                     space -= (int)(ROAD_WIDTH / SEGMENT_LENGTH);
@@ -356,9 +356,9 @@ void Roundabout::fix_tails() {
                 // add tail on entry
                 for (int t = 1; t <= space; t++) {
                     tail_idx = proper_idx(entries[car->get_starting_from()], -t);
-                    if (entries[car->get_starting_from()][tail_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("fix_tails", "entry", car->get_starting_from(), tail_idx, second);
+                    if (entries[car->get_starting_from()][tail_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("fix_tails", "entry", car->get_starting_from(), tail_idx, second);
                     }
                     entries[car->get_starting_from()][tail_idx] = new Car(car, car->get_space() - space + 1);
                 }
@@ -842,16 +842,16 @@ void Roundabout::move_ee(std::map<int, std::vector<Car *>> &e, bool exit) {
                     delete car;
                 } else if (exit) {
                     // normal move on exit
-                    if (exits_next[pair.first][new_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("move_ee", "exit", pair.first, new_idx, second);
+                    if (exits_next[pair.first][new_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("move_ee", "exit", pair.first, new_idx, second);
                     }
                     exits_next[pair.first][new_idx] = car;
                 } else {
                     // normal move on entry
-                    if (entries_next[pair.first][new_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("move_ee", "entry", pair.first, new_idx, second);
+                    if (entries_next[pair.first][new_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("move_ee", "entry", pair.first, new_idx, second);
                     }
                     entries_next[pair.first][new_idx] = car;
                 }
@@ -876,9 +876,9 @@ void Roundabout::move() {
                 if (lane_idx == no_lanes - 1 && car->get_v_available() > d_to_exit) {
                     // move to exit
                     new_idx = car->get_v_available() - d_to_exit - 1;
-                    if (exits_next[car->get_destination()][new_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("move", "exit", car->get_destination(), new_idx, second);
+                    if (exits_next[car->get_destination()][new_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("move", "exit", car->get_destination(), new_idx, second);
                     }
                     exits_next[car->get_destination()][new_idx] = car;
                     car->set_exited_from(lane_idx);
@@ -887,9 +887,9 @@ void Roundabout::move() {
                     // move on lane
                     new_idx = idx + car->get_v_available();
                     new_idx = proper_idx(lane, new_idx);
-                    if (lanes_next[lane_idx][new_idx]) {
-                        history += "==========ERROR==========\n";
-                        print_error("move", "lane", lane_idx, new_idx, second);
+                    if (lanes_next[lane_idx][new_idx] && WARNINGS) {
+                        history += "==========WARNING==========\n";
+                        print_warning("move", "lane", lane_idx, new_idx, second);
                     }
                     lanes_next[lane_idx][new_idx] = car;
                 }

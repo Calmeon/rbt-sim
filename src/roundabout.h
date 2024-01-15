@@ -92,7 +92,7 @@ class Roundabout {
     ~Roundabout();
 
     void set_max_density(double density);
-    void add_agent(int dr, int a_plus, int a_minus, double wait_percent,
+    void add_agent(int dr, int a_plus, int a_minus, double wait_percent = 0.1,
                    double change_bias = 0.0, int chance = 1);
     void set_saving(bool save);
 

@@ -129,18 +129,23 @@ std::string prepare_string_lane(std::vector<Car *> &lane, std::string s, int int
     return result;
 }
 
-std::string get_output_file_path(std::string filename) {
+std::string get_output_file_path(std::string filename, std::string foldername) {
     // create history folder
-    std::string historyPath = "../history";
-    if (!std::filesystem::exists(historyPath)) std::filesystem::create_directory(historyPath);
+    std::string dir_path = "../history";
+    if (!std::filesystem::exists(dir_path)) std::filesystem::create_directory(dir_path);
     // create seed folder
-    std::string directoryPath = "../history/" + std::to_string(seed);
-    if (!std::filesystem::exists(directoryPath)) std::filesystem::create_directory(directoryPath);
+    dir_path += "/" + std::to_string(seed);
+    if (!std::filesystem::exists(dir_path)) std::filesystem::create_directory(dir_path);
 
-    return directoryPath + "/" + filename + ".txt";
+    if (foldername != "") {
+        dir_path += "/" + foldername;
+        if (!std::filesystem::exists(dir_path)) std::filesystem::create_directory(dir_path);
+    }
+
+    return dir_path + "/" + filename + ".txt";
 }
 
-void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to, std::string title) {
+void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to, std::string title, std::string foldername) {
     double flow, avg_density;
     std::string history = rbt.get_info() + "\nDensity:Flow:Avg. density\n0:0.000000:0.000000\n";
 
@@ -162,19 +167,19 @@ void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int t
         history += std::to_string(density) + ":" + std::to_string(flow) + ":" + std::to_string(avg_density) + "\n";
     }
 
-    std::ofstream history_file(get_output_file_path(title));
+    std::ofstream history_file(get_output_file_path(title, foldername));
     history_file << history;
     history_file.close();
 }
 
-void fundamental_diagram() {
-    std::string python_script = "python3 diagrams/fundamental_diagram.py " + std::to_string(seed);
+void fundamental_diagram(std::string foldername) {
+    std::string python_script = "python3 diagrams/fundamental_diagram.py " + foldername;
     std::cout << "Creating diagram...\n";
     system(python_script.c_str());
 }
 
-void print_error(std::string function, std::string lane_type, int lane_number, int idx, int second) {
-    std::cerr << "==========ERROR=========="
+void print_warning(std::string function, std::string lane_type, int lane_number, int idx, int second) {
+    std::cerr << "==========WARNING=========="
               << "\nSeed: " << seed
               << "\nSecond: " << second
               << "\nFunction: " << function

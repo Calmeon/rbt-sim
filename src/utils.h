@@ -7,6 +7,7 @@
 
 #include "car.h"
 #include "roundabout.h"
+#include "settings.h"
 
 bool is_head(Car *car);
 bool is_tail(Car *car);
@@ -32,11 +33,11 @@ int weighted_random_choice(std::map<int, int> &dict);
 std::string prepare_string_lane(std::vector<Car *> &lane,
                                 std::string s, int intend = 10);
 
-std::string get_output_file_path(std::string filename = "output");
+std::string get_output_file_path(std::string filename, std::string foldername = "");
 
-void prepare_fundamental(Roundabout &rbt, int samples, int step, int from,
-                         int to, std::string title = "output");
-void fundamental_diagram();
+void prepare_fundamental(Roundabout &rbt, int samples, int step, int from, int to,
+                         std::string title = "output", std::string foldername = "");
+void fundamental_diagram(std::string foldername = std::to_string(seed));
 
-void print_error(std::string function, std::string lane_type,
-                 int lane_number, int idx, int second);
+void print_warning(std::string function, std::string lane_type,
+                   int lane_number, int idx, int second);

@@ -36,8 +36,7 @@ void Car::set_exited_from(int exited_from) { this->exited_from = exited_from; }
 int Car::get_exited_from() { return exited_from; }
 Car *Car::get_head() { return head ? head : this; }
 
-int Car::get_dr() { return agent->get_dr(); }
-double Car::get_g() { return (double)get_dr() * ((double)v / (double)MAX_V); }
+double Car::get_g() { return (double)agent->get_dr() * ((double)v / (double)MAX_V); }
 int Car::get_a_plus() { return agent->get_a_plus(); }
 int Car::get_a_minus() { return agent->get_a_minus(); }
 double Car::get_wait_percent() { return agent->get_wait_percent(); }

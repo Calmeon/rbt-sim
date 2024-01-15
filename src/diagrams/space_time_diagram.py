@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import re
 
+LABELS = False
+
 
 def read_file(filename):
     rbt_dict = dict()
@@ -116,11 +118,12 @@ def plot(folder_path, rbt_dict, lane_lengths):
             plot_ee(exits, key, lane_lengths, "red", 0)
             plot_ee(entries, key, lane_lengths, "green", 1)
 
-        plt.xlabel("Driving direction (->)")
-        plt.ylabel("Time (s)")
+        if LABELS:
+            plt.xlabel("Driving direction (->)")
+            plt.ylabel("Time (s)")
+            plt.title(key)
         plt.xlim(0, len(lane[0]))
         plt.ylim(-0.5, seconds - 0.5)
-        plt.title(key)
         plt.tight_layout()
 
         if key.startswith("Entry"):

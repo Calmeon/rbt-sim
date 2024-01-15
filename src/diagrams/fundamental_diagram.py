@@ -20,7 +20,7 @@ def read_file(filename):
 
 
 def extract_number(filename):
-    return int(filename.split("=")[1].split(".")[0])
+    return int(filename.split(" ")[0])
 
 
 def plot_comparison(folder_path):
@@ -37,28 +37,28 @@ def plot_comparison(folder_path):
             file_path = os.path.join(folder_path, filename)
             densities, flows = read_file(file_path)
             max_flow = max(max_flow, *flows)
-            label = os.path.splitext(filename)[0]
+            label = os.path.splitext(filename)[0].split(" ", 1)[1]
             plot(densities, flows, "", label)
 
     plt.ylim(0, max_flow * 1.1)
     plt.legend()
-    plt.savefig(f"{folder_path}/fundamental_diagram.png")
+    plt.savefig(f"{folder_path}/{folder_path.split('/')[-1]}.png", dpi=300)
+    plt.clf()
 
 
 def plot(densities, flows, folder_path="", label=""):
-    coeff = np.polyfit(densities, flows, 4)
+    coeff = np.polyfit(densities, flows, 8)
     poly1d = np.poly1d(coeff)
 
     xn = np.linspace(min(densities), max(densities), 1000)
     yn = poly1d(xn)
 
-    # plt.scatter(densities, flows)
+    plt.scatter(densities, flows)
     if label == "":
         plt.plot(xn, yn)
     else:
         plt.plot(xn, yn, label=label)
 
-    plt.title("Fundamental diagram")
     plt.xlim(densities[0], densities[-1])
     plt.ylim(0, max(flows) * 1.1)
     plt.xlabel("Density (%)")
@@ -75,7 +75,9 @@ def main():
         densities, flows = read_file(f"{folder_path}/output.txt")
         plot(densities, flows, folder_path)
     else:
-        plot_comparison(folder_path)
+        folder_list = os.listdir(folder_path)
+        for folder in folder_list:
+            plot_comparison(folder_path + f"/{folder}")
 
 
 if __name__ == "__main__":
